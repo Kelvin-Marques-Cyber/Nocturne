@@ -1,0 +1,28 @@
+{
+  "duration": 30.0,
+  "width": 720,
+  "height": 1280,
+  "frameRate": "30/1",
+  "cutCandidates": [
+    2.03333,
+    2.06667,
+    2.1,
+    4.03333,
+    4.1,
+    4.53333,
+    26.0333,
+    26.0667,
+    26.1
+  ],
+  "medianShotSeconds": 2.033,
+  "palette": {
+    "darkRatio": 0.8513,
+    "lightRatio": 0.001,
+    "redRatio": 0.0969
+  },
+  "method": "FFprobe + FFmpeg scene difference > 0.17 + 1fps RGB sample",
+  "limitations": [
+    "Movement and flashes can be detected as cuts.",
+    "This describes technical properties; it does not infer narrative meaning."
+  ]
+}
