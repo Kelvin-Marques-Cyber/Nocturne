@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Kelvin e Silva Marques
 import {rasterize} from '../src/engine/raster';
-import {spawn} from 'node:child_process';
+import {spawn,execFileSync} from 'node:child_process';
 import {once} from 'node:events';
 import {resolve,join} from 'node:path';
 import {mkdir,rename,rm,readFile} from 'node:fs/promises';
@@ -40,6 +40,8 @@ export async function renderVideo(project:Project,opts:RenderOptions){
    if(i%project.fps===0||i===total-1)opts.onProgress?.({frame:i+1,total,percent:(i+1)/total*100,elapsed:(Date.now()-start)/1000});
   }
   ffmpeg.stdin.end();const result=await completion;if(result.code!==0)throw spawnError??Error(stderr||'FFmpeg falhou.');
-  await rename(temp,out);return {output:out,frames:total,duration,width:ww,height:hh,fps:project.fps,elapsed:(Date.now()-start)/1000};
+  await rename(temp,out);
+  const metadata=JSON.parse(execFileSync(process.env.FFPROBE??'ffprobe',['-v','quiet','-of','json','-show_streams',out],{encoding:'utf8'})),encoded=metadata.streams.find((s:{codec_type:string})=>s.codec_type==='video');
+  return {output:out,frames:Number(encoded.nb_frames),inputFrames:total,duration,width:ww,height:hh,fps:project.fps,elapsed:(Date.now()-start)/1000};
  }catch(e){ffmpeg.kill('SIGTERM');await completion;await rm(temp,{force:true});throw e;}finally{opts.signal?.removeEventListener('abort',abort);}
 }

@@ -168,7 +168,7 @@ npm run verify -- --project projects/deus-nos-ve.json --video output/deus-nos-ve
 
 Os testes de mídia criam seu próprio som de teste; a gravação pessoal não é necessária para executar a suíte. São verificados IK, continuidade, escolha de cenas e palavras nos limites exatos, reprodução determinística do SVG, preservação da letra, âncoras ASR, rejeição de intervalos inválidos, perspectiva 3D, transições rasterizadas e exportação real H.264/AAC em 30/60 FPS. Um trem de pulsos sintético verifica ataques e BPM conhecido.
 
-`verify` compara formato, resolução, taxa, quantidade de quadros, duração e início das trilhas de áudio/vídeo. Também registra hashes dos SVGs amostrados por cena em `output/verification.json`.
+`verify` compara formato, resolução, taxa, quantidade de quadros, duração e início das trilhas de áudio/vídeo. Também verifica o conteúdo do áudio em três pontos por correlação, admite a quantização de até um frame no final da faixa e registra hashes dos SVGs amostrados por cena em `output/verification.json`.
 
 ## Remotion opcional
 
