@@ -79,10 +79,16 @@ export function poseAt(motions:Motion[],t:number,bpm=120):Pose {
 }
 export function solveRig(p:Pose){
  const dx=p.neck[0]-p.hip[0],dy=p.neck[1]-p.hip[1],length=Math.max(1,Math.hypot(dx,dy)),side:Point=[-dy/length,dx/length],center:Point=[mix(p.neck[0],p.hip[0],.1),mix(p.neck[1],p.hip[1],.1)];
- const shoulder=(sign:number):Point=>[center[0]+side[0]*sign*5.5,center[1]+side[1]*sign*5.5];
+ const shoulder=(sign:number):Point=>[center[0]+side[0]*sign*8,center[1]+side[1]*sign*8];
  const hip=(sign:number):Point=>[p.hip[0]+side[0]*sign*3,p.hip[1]+side[1]*sign*3];
  const ls=shoulder(-1),rs=shoulder(1),lh=hip(-1),rh=hip(1);
- const arm=(root:Point,target:Point,sign:number)=>ik(root,target,anatomy.upperArm,anatomy.forearm,-sign);
+ // Keep a small elbow bend instead of snapping into a locked, straight arm
+ // when an expressive target reaches the edge of the anatomical workspace.
+ const arm=(root:Point,target:Point,sign:number)=>{
+  const dx=target[0]-root[0],dy=target[1]-root[1],distance=Math.hypot(dx,dy),reach=anatomy.upperArm+anatomy.forearm-2;
+  const end:Point=distance>reach?[root[0]+dx*reach/distance,root[1]+dy*reach/distance]:target;
+  return ik(root,end,anatomy.upperArm,anatomy.forearm,-sign);
+ };
  const leg=(root:Point,target:Point)=>{let result=ik(root,target,anatomy.thigh,anatomy.shin,-1);if(result[0][1]>Math.max(root[1],target[1])+1)result=ik(root,target,anatomy.thigh,anatomy.shin,1);return result;};
  return{leftShoulder:ls,rightShoulder:rs,leftHip:lh,rightHip:rh,leftArm:arm(ls,p.leftHand,-1),rightArm:arm(rs,p.rightHand,1),leftLeg:leg(lh,p.leftFoot),rightLeg:leg(rh,p.rightFoot)};
 }
@@ -98,7 +104,7 @@ export function characterSVG(p:Pose,c:Character,accent:string,heartPulse:number,
  for(const [foot,sign]of [[rig.leftLeg[1],-1],[rig.rightLeg[1],1]]as const)paths.push(path(`M${pt(foot)} q${n(6+sign)} 1 10 0`,sign<0?.57:1));
  const rx=anatomy.headX*c.head,ry=anatomy.headY*c.head,bottom:Point=[p.head[0],p.head[1]+ry];
  const neck=path(`M${pt(p.neck)} Q${n(mix(p.neck[0],bottom[0],.6))} ${n(mix(p.neck[1],bottom[1],.5))} ${pt(bottom)}`);
- const head=`<g transform="rotate(${n(p.tilt)} ${pt(p.head)})"><ellipse cx="${n(p.head[0])}" cy="${n(p.head[1])}" rx="${n(rx)}" ry="${n(ry)}" fill="${ghost?'none':'#08090b'}"/><path d="M${n(p.head[0]+rx*.82)} ${n(p.head[1]-4)}l3 2" opacity=".5" stroke-width="${n(s*.65)}"/></g>`;
+ const head=`<g transform="rotate(${n(p.tilt*.7)} ${pt(p.head)})"><ellipse cx="${n(p.head[0])}" cy="${n(p.head[1])}" rx="${n(rx)}" ry="${n(ry)}" fill="${ghost?'none':'#08090b'}"/></g>`;
  const a=p.rotation*Math.PI/180;
  const points=[...rig.leftArm,...rig.rightArm,...rig.leftLeg,...rig.rightLeg,p.hip,p.neck];
  const maxY=Math.max(0,...points.map(([x,y])=>x*Math.sin(a)+y*p.squash*Math.cos(a)),p.head[0]*Math.sin(a)+p.head[1]*p.squash*Math.cos(a)+Math.hypot(rx*Math.sin(a),ry*Math.cos(a)));

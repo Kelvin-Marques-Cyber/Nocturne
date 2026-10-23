@@ -13,7 +13,7 @@ export function expressivePose(base:Pose,p:Project,s:Scene,t:number):{pose:Pose;
  const words=p.words.filter(w=>s.wordIds.includes(w.id));
  const motion=s.motions.find(m=>t>=m.start&&t<m.end),current=motion?.action;
  // Physical locomotion and load-bearing hands keep their original constraints.
- const protectedAction=current&&['fall','crawl','push','drag','brace','run','stumble'].includes(current);
+ const protectedAction=current&&['fall','crawl','push','drag','brace','run','stumble','rest'].includes(current);
  if(protectedAction)return{pose:base};
  const motionFade=motion?Math.min(smooth((t-motion.start)/.3),smooth((motion.end-t)/.3)):1;
  const targets:Record<string,[Point,Point,number]>={
@@ -24,7 +24,7 @@ export function expressivePose(base:Pose,p:Project,s:Scene,t:number):{pose:Pose;
   const line=words.filter(w=>w.line===id),start=line[0].start,end=line.at(-1)!.end;
   const envelope=Math.min(smooth((t-start+.18)/(.36/recipe.speed)),smooth((end+.32-t)/.35));if(envelope<=0)return[];
   const delivery=lineDelivery(p.analysis,line,s.events),gesture=performance.followLyrics===false?recipe.kind:semanticGesture(line.map(w=>w.text).join(' '),recipe.kind);
-  const weight=clamp(envelope*recipe.amount*performance.intensity*(delivery.kind==='shout'?1:delivery.kind==='whisper'?.6:.8)*(current==='walk'?.18:1))*motionFade;
+  const weight=clamp(envelope*recipe.amount*performance.intensity*(delivery.kind==='shout'?.82:delivery.kind==='whisper'?.38:.58)*(current==='walk'?.12:1))*motionFade;
   return[{gesture,weight,line}];
  });
  if(!layers.length)return{pose:base};
@@ -34,7 +34,7 @@ export function expressivePose(base:Pose,p:Project,s:Scene,t:number):{pose:Pose;
  for(const layer of layers){const{gesture,line}=layer,weight=layer.weight/normalizer,[left,right,tilt]=targets[gesture];
   for(const [key,target]of [['leftHand',left],['rightHand',right]]as const){pose[key][0]+=(base.neck[0]+target[0]-base[key][0])*weight;pose[key][1]+=(base.neck[1]+target[1]-base[key][1])*weight;}
   const active=line.find(w=>t>=w.start&&t<w.end),wordProgress=active?clamp((t-active.start)/Math.max(.1,active.end-active.start)):0,emphasis=Math.sin(wordProgress*Math.PI)*voiceLevel(p.analysis,t);
-  pose.head[0]+=weight*(gesture==='search'?-6:gesture==='point'?5:2);pose.head[1]+=weight*(gesture==='grieve'?8:-1-emphasis*1.5);pose.tilt+=(tilt-base.tilt)*weight;
+  pose.head[0]+=weight*(gesture==='search'?-4:gesture==='point'?3:1);pose.head[1]+=weight*(gesture==='grieve'?5:-1-emphasis);pose.tilt+=(tilt-base.tilt)*weight*.65;
  }
  const gesture=layers.reduce((a,b)=>a.weight>b.weight?a:b).gesture;
  // Feet, pelvis and body rotation are untouched: gestures are sentence-shaped
