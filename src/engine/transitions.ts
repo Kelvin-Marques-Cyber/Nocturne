@@ -3,7 +3,7 @@
 import type{Analysis,Scene}from'./model';
 import{clamp,smooth,easeOut,mix,n,rand,pt}from'./math';
 type Transition=Scene['transition'];
-export const transitionLabels:Record<Transition,string>={cut:'Corte',shutter:'Obturador',dissolve:'Dissolução',ink:'Tinta',channel:'Troca de canal',iris:'Íris',whip:'Whip pan',burn:'Queima de filme',zoom:'Mergulho',split:'Planos divididos',mosaic:'Fragmentação',filmstrip:'Película vertical',ripple:'Onda circular',raster:'Varredura CRT',aperture:'Diafragma',typewriter:'Reescrita de terminal',crosszoom:'Travessia de profundidade'};
+export const transitionLabels:Record<Transition,string>={cut:'Corte',shutter:'Obturador',dissolve:'Dissolução',ink:'Tinta',channel:'Troca de canal',iris:'Íris',whip:'Whip pan',burn:'Queima de filme',zoom:'Mergulho',split:'Planos divididos',mosaic:'Fragmentação',filmstrip:'Película vertical',ripple:'Onda circular',raster:'Varredura CRT',aperture:'Diafragma',typewriter:'Reescrita de terminal',crosszoom:'Travessia de profundidade',exposure:'Dupla exposição',portal:'Passagem de luz',parallax:'Passagem entre planos','light-sweep':'Feixe de varredura'};
 export function transitionDuration(kind:Transition,bpm:number){
  if(kind==='cut')return 0;
  const beat=60/Math.max(40,bpm||120);
@@ -34,6 +34,19 @@ export function composeTransition(input:{kind:Transition;progress:number;incomin
  const scale=(z:number)=>`translate(${w/2} ${h/2}) scale(${n(z)}) translate(${-w/2} ${-h/2})`;
  if(q>=1||kind==='cut')return layer(incoming);
  if(kind==='dissolve')return layer(outgoing)+layer(incoming,'',e);
+ if(kind==='exposure'){
+  const afterimage=Math.sin(q*Math.PI)*.16;
+  return layer(outgoing,'',1-e)+layer(outgoing,`translate(${n(e*w*.045)} ${n(-e*h*.018)})`,afterimage)+layer(incoming,scale(mix(1.045,1,e)),e);
+ }
+ if(kind==='portal'){
+  const radius=Math.hypot(w,h)*.55*easeOut(q),center: [number,number]=[w*.52,h*.42];
+  return clip(`<ellipse cx="${center[0]}" cy="${center[1]}" rx="${n(radius)}" ry="${n(radius*.8)}"/>`,outgoing,incoming)+`<ellipse cx="${center[0]}" cy="${center[1]}" rx="${n(radius)}" ry="${n(radius*.8)}" fill="none" stroke="#ffc181" stroke-width="${n((1-q)*13*u+u)}" opacity="${n(Math.sin(q*Math.PI)*.7)}"/>`;
+ }
+ if(kind==='parallax')return layer(outgoing,`translate(${n(-e*w*.2)} ${n(e*h*.02)}) ${scale(1-e*.12)}`,1-e)+layer(incoming,`translate(${n((1-e)*w*.34)} ${n((1-e)*-h*.025)}) ${scale(mix(.82,1,e))}`,e);
+ if(kind==='light-sweep'){
+  const center=mix(-w*.25,w*1.25,e),band=w*.13;
+  return clip(`<path d="M0 0H${n(center)}L${n(center-w*.15)} ${h}H0Z"/>`)+`<path d="M${n(center-band)} 0H${n(center)}L${n(center-w*.15)} ${h}H${n(center-w*.15-band)}Z" fill="${fg}" opacity="${n(Math.sin(q*Math.PI)*.18)}"/>`;
+ }
  if(kind==='zoom'||kind==='crosszoom')return layer(outgoing,scale(1+e*.9))+layer(incoming,scale(mix(1.65,1,e)),e);
  if(kind==='whip')return layer(outgoing,`translate(${n(-w*easeOut(q))} 0)`)+layer(incoming,`translate(${n(w*(1-easeOut(q)))} 0)`);
  if(kind==='filmstrip')return layer(outgoing,`translate(0 ${n(-h*e)})`)+layer(incoming,`translate(0 ${n(h*(1-e))})`)+`<path d="M0 ${n(h*(1-e))}H${w}" stroke="${accent}" stroke-width="${3*u}" opacity="${n(Math.sin(q*Math.PI))}"/>`;

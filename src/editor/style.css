@@ -117,3 +117,16 @@
 @media(max-width:380px){.scene-list{grid-template-columns:minmax(0,1fr)}.scene-card{flex-direction:row;min-height:110px}.scene-art{width:70px;flex-shrink:0}.top-actions{gap:3px}.mobile-nav button{font-size:11px}.preview-toolbar>div:last-child{grid-template-columns:1fr 1fr}.preview-toolbar select:last-child{grid-column:1/-1}}
 @media(pointer:coarse){button{touch-action:manipulation}input[type=range]{height:28px}button,input,select,textarea{scroll-margin-block:76px}a,button{min-height:40px}}
 @media(prefers-reduced-motion:reduce){.busy-dot{animation:none}*{scroll-behavior:auto!important}}
+
+.reference-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:14px 0}
+.reference-presets button{display:flex;flex-direction:column;align-items:stretch;gap:7px;min-width:0;padding:7px;border:1px solid #34333d;text-align:left;font-size:10px;color:#c5c8d2}
+.reference-presets button.selected{border-color:#e56268;background:#2b1c23}.reference-presets button>span:last-child{line-height:1.4}
+.reference-swatch{height:44px;position:relative;overflow:hidden;background:#11131b;border-radius:2px}
+.swatch-sketch-room{background:radial-gradient(ellipse at 26% 65%,#eeb77285,transparent 48%),linear-gradient(135deg,#24344e,#101824)}
+.swatch-sketch-room:after{content:'';position:absolute;inset:9px 20%;border:1px solid #b6c2d252;transform:perspective(110px) rotateX(-15deg)}
+.swatch-wireframe-lab{background:repeating-linear-gradient(35deg,transparent 0 9px,#74bbc13b 10px 11px),repeating-linear-gradient(-35deg,#10212c 0 9px,#74bbc13b 10px 11px)}
+.swatch-solar-drift{background:radial-gradient(ellipse at 55% 45%,#fff0bc 1%,#e9964a 8%,#5c3d60 32%,#141d3c 66%)}
+.swatch-type-archive{background:repeating-linear-gradient(0deg,#08090b 0 5px,#8c8f9829 6px 7px)}.swatch-type-archive:after{content:'Aa';position:absolute;inset:3px;text-align:center;background:#08090b;color:#d0d3d9;font:28px monospace}
+.swatch-gallery-flight{background:repeating-linear-gradient(105deg,#23384b 0 20px,#11131b 21px 26px,#432d3c 27px 48px,#11131b 49px 54px)}
+.reference-panel .field{margin-top:15px}.reference-panel .note b{color:#e5dcd9}
+@media(max-width:760px){.reference-presets{gap:10px}.reference-presets button{font-size:13px;padding:10px}.reference-swatch{height:66px}}

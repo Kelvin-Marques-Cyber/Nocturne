@@ -10,6 +10,8 @@ Esta é uma primeira implementação funcional. O planejamento automático utili
 
 ## O que já funciona
 
+- Novas referências adotadas em cinco montagens: quarto desenhado com dupla exposição, laboratório wireframe, travessia solar, arquivo tipográfico e galeria em profundidade. Há seleção por música/cena e combinação automática. [Direção e detalhes](docs/reference-edits.md).
+
 - O modo reel monta sequências por frases: tipografia em planos com acompanhamento e revelação do conjunto, janelas sobrepostas, diálogos com antecipação e resposta do personagem, e ambientes com seus próprios objetos. Instrumentos, como guitarra e piano, chegam aos renderizadores físicos também nesse modo.
 - As palavras entram pelos timestamps importados; o planejamento visual não altera a sincronização. A câmera gira em uma batida escolhida por sequência, com resposta à entonação vocal e às notas sustentadas. Frases comuns conservam o personagem; o foco manual continua disponível.
 - Importação de MP3, WAV e FLAC, edição da letra e importação/exportação de projetos JSON.
@@ -19,12 +21,12 @@ Esta é uma primeira implementação funcional. O planejamento automático utili
 - Personagens vetoriais com IK de dois segmentos, passadas com contato e velocidade contínuos, pés apoiados no chão, antecipação, respiração e mistura contínua entre ações.
 - Andar, correr, tropeçar, cair, ajoelhar, levantar, rastejar, hesitar, reagir, segurar, empurrar, arrastar e descansar, além de virar, resistir ao vento, flutuar e recuar de um impacto.
 - Televisão construída com vértices 3D, projeção perspectiva e palavras projetadas na superfície da tela. Chiado, varredura, antenas, botões, volume e movimento de câmera são procedurais.
-- 17 transições com duração ligada ao BPM: corte, obturador, tinta, dissolução real, troca de canal, íris, whip pan, queima, mergulho, planos divididos, fragmentação, película vertical, onda circular, varredura CRT, diafragma, reescrita e travessia de profundidade.
+- 21 transições com duração ligada ao BPM: dupla exposição, passagem de luz, paralaxe, feixe de varredura, corte, obturador, tinta, dissolução real, troca de canal, íris, whip pan, queima, mergulho, planos divididos, fragmentação, película vertical, onda circular, varredura CRT, diafragma, reescrita e travessia de profundidade.
 - Zooms semânticos por palavra/frase: a câmera entra na letra ou na TV; o cenário e o personagem saem do quadro durante o close-up. Os eventos acompanham o `wordId` quando os tempos são editados.
 - Frases inteiras em um plano com perspectiva, rotação 3D sutil e enquadramento protegido nos formatos vertical e horizontal. Gritos têm ataque rápido e recuperação; trechos suaves, crescendos e notas sustentadas recebem envelopes distintos.
-- Direção expressiva: 36 receitas de câmera, 48 gestos, 20 tratamentos tipográficos com cinco faces DejaVu, 43 texturas e seis ritmos. O produto desses eixos oferece **8.916.480 combinações de presets**, geradas por seed e editáveis; não são milhões de animações desenhadas individualmente.
+- Direção expressiva: 48 receitas de câmera, 80 gestos, 52 tratamentos tipográficos com 13 faces, 79 texturas e 8 ritmos. São **126.197.760 combinações de presets**, geradas por seed e editáveis; não são animações desenhadas individualmente.
 - O corpo interpreta dúvida, recusa, súplica, escuta, proteção e outras intenções com preparação e mistura entre frases. Gestos usam o tronco superior e preservam pés e mãos que sustentam objetos; não são ciclos de dança.
-- Seis estilos e 14 filtros combináveis: noir, giz, sinal, corrupção digital, industrial ácido e esmeralda. Camadas têm intensidade, ordem e ativação próprias.
+- Seis estilos e 26 filtros combináveis: noir, giz, sinal, corrupção digital, industrial ácido e esmeralda. Camadas têm intensidade, ordem e ativação próprias.
 - Vocabulário narrativo em português, inglês, espanhol, japonês, coreano, russo, francês, alemão, italiano e chinês, com evidência das palavras reconhecidas no Inspector.
 - PWA estático para GitHub Pages: importação, análise STFT em worker, edição e MP4 H.264/AAC no navegador com WebCodecs. Arquivos de áudio ficam no IndexedDB do aparelho.
 - Editor com monitor, linha do tempo, envelope sonoro, cenas, palavras, câmera, personagem, estilos, desfazer e exportação com progresso.

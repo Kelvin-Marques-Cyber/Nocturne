@@ -4,7 +4,8 @@ import {lexical,languages,type Language} from './language';
 import {textureKinds,validPerformance,type Performance} from './catalog';
 import {deliveries,type Delivery} from './voice';
 import {newSceneKinds,scenePreset} from './scene-catalog';
-export const transitions=['cut','shutter','dissolve','ink','channel','iris','whip','burn','zoom','split','mosaic','filmstrip','ripple','raster','aperture','typewriter','crosszoom'] as const;
+import {editProfiles,type EditProfile} from './edit-presets';
+export const transitions=['cut','shutter','dissolve','ink','channel','iris','whip','burn','zoom','split','mosaic','filmstrip','ripple','raster','aperture','typewriter','crosszoom','exposure','portal','parallax','light-sweep'] as const;
 export const kinds = ['constellation','heart','corridor','choice','echo','hide','soul','fall','denial','orbit','rest','terminal','ocean','door','lift','television','tunnel3d','mirror','storm','clock','bridge','forest','city','desert','staircase','cage','eclipse','prism','guitar','piano','drums',...newSceneKinds] as const;
 export type SceneKind=typeof kinds[number];
 export const actions=['idle','walk','run','stumble','fall','kneel','rise','crawl','fear','hesitate','surprise','hold','push','drag','reach','rest','turn','brace','float','recoil'] as const;
@@ -18,12 +19,12 @@ export interface Character {name:string;stroke:string;thickness:number;scale:num
 export interface Camera {zoomFrom:number;zoomTo:number;panX:number;panY:number;roll:number;shake:number;lyricFocus?:number;focusX?:number;focusY?:number}
 export interface SceneEvent {at:number;duration:number;type:'impact'|'freeze'|'glitch'|'flash'|'word'|'focus';strength:number;wordId?:string;focusMode?:'phrase'|'word';delivery?:Delivery;source?:'auto'|'manual'}
 export interface Motion {action:Action;start:number;end:number;weight?:number}
-export interface Scene {id:string;start:number;end:number;kind:SceneKind;preset?:string;title:string;intent:string;code:string;wordIds:string[];accent:string;variant:number;camera:Camera;motions:Motion[];events:SceneEvent[];transition:typeof transitions[number];performance?:Performance;meaning?:{language:Language;concepts:string[];keywords:string[]}}
+export interface Scene {id:string;start:number;end:number;kind:SceneKind;preset?:string;editProfile?:EditProfile;title:string;intent:string;code:string;wordIds:string[];accent:string;variant:number;camera:Camera;motions:Motion[];events:SceneEvent[];transition:typeof transitions[number];performance?:Performance;meaning?:{language:Language;concepts:string[];keywords:string[]}}
 export const filterTypes=textureKinds;
 export type FilterType=typeof filterTypes[number];
 export interface FilmFilter{id:string;type:FilterType;amount:number;enabled:boolean}
 export interface Style {name:'terminal-noir'|'chalk'|'signal'|'datamosh'|'acid-industrial'|'emerald';filters?:FilmFilter[];background:string;foreground:string;accent:string;grain:number;glitch:number;chromatic:number;vhs:number;captions:boolean}
-export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;direction?:'reel'|'worlds';lyricFocusPolicy?:'balanced-v1';visualSyncOffsetSeconds?:number;seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
+export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;direction?:'reel'|'worlds';editProfile?:EditProfile;lyricFocusPolicy?:'balanced-v1';visualSyncOffsetSeconds?:number;seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
 const fx=(type:FilterType,amount:number):FilmFilter=>({id:type,type,amount,enabled:true});
 export const styles:Record<Style['name'],Style>={
  'terminal-noir':{name:'terminal-noir',background:'#08090b',foreground:'#e9e5dc',accent:'#ed3e43',grain:.22,glitch:.28,chromatic:.35,vhs:.16,captions:true},
@@ -45,6 +46,7 @@ export function validateProject(value:unknown): asserts value is Project {
  if(!p||p.schemaVersion!==1||!Array.isArray(p.scenes)||!p.scenes.length||!Array.isArray(p.words)||typeof p.audio!=='string'||typeof p.lyrics!=='string')throw Error('Projeto JSON inválido (schemaVersion = 1).');
  if(!finite(p.duration)||p.duration<=0||p.duration>7200||![30,60].includes(p.fps)||!['vertical','horizontal'].includes(p.format))throw Error('Duração, formato ou FPS inválidos.');
  if(p.direction!==undefined&&!['reel','worlds'].includes(p.direction))throw Error('Direção inválida.');
+ if(p.editProfile!==undefined&&!editProfiles.includes(p.editProfile))throw Error('Referência de montagem inválida.');
  if(p.character?.design!==undefined&&!['ink','articulated'].includes(p.character.design))throw Error('Desenho inválido.');
  if(p.language!==undefined&&!Object.hasOwn(languages,p.language))throw Error('Idioma inválido.');
  if(p.lyricFocusPolicy!==undefined&&p.lyricFocusPolicy!=='balanced-v1')throw Error('Política de zoom inválida.');
@@ -65,6 +67,7 @@ export function validateProject(value:unknown): asserts value is Project {
   if([s.title,s.intent,s.code,s.accent,s.id].some(v=>typeof v!=='string')||!transitions.includes(s.transition))throw Error(`Cena ${i+1}: texto ou transição inválidos.`);
   if(!s.camera||Object.values(s.camera).some(v=>!finite(v))||s.camera.zoomFrom<=0||s.camera.zoomTo<=0)throw Error('Câmera inválida.');
   if(s.performance!==undefined&&!validPerformance(s.performance))throw Error('Receita de direção inválida.');
+  if(s.editProfile!==undefined&&!editProfiles.includes(s.editProfile))throw Error('Referência da cena inválida.');
   if(s.preset!==undefined&&(typeof s.preset!=='string'||!scenePreset(s)))throw Error('Composição de cena inválida.');
   for(const v of [s.camera.focusX,s.camera.focusY])if(v!==undefined&&(v<0||v>1))throw Error('O ponto de interesse da câmera deve estar dentro do quadro.');
   if(s.camera.lyricFocus!==undefined&&(s.camera.lyricFocus<0||s.camera.lyricFocus>1))throw Error('O foco da letra deve estar entre zero e um.');

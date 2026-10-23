@@ -14,6 +14,7 @@ import {textureRecipes} from './catalog';
 import {beatAccents,beatResponse} from './beat';
 import {stageWorlds} from './stage';
 import {renderReelStage} from './reel-stage';
+import {renderReferenceEdit} from './reference-edits';
 import {libraryWorlds} from './world-library';
 
 export function sceneAt(p:Project,t:number){return p.scenes.find(s=>t>=s.start&&t<s.end)??(t<p.scenes[0].start?p.scenes[0]:p.scenes.at(-1)!);}
@@ -289,7 +290,7 @@ function sceneLayer(c:Ctx,frame:number,id:string){
  if(p.direction==='reel'){
   // Reels stage phrases in their own space. Native worlds keep their props;
   // their old thematic labels give way to the supplied sung words.
-  let out=renderReelStage(c,()=>worlds[s.kind]({...c,s:{...s,accent:''},words:c.words.filter(word=>word.start<=t)}));
+  let out=renderReferenceEdit(c)??renderReelStage(c,()=>worlds[s.kind]({...c,s:{...s,accent:''},words:c.words.filter(word=>word.start<=t)}));
   const manual=focus&&(focus.event.source==='manual'||focus.event.source===undefined&&(focus.event.delivery!==undefined||focus.event.focusMode==='word'&&focus.event.duration===1.7));
   if(manual)out=(a<.999?`<g opacity="${n(1-smooth(a/.94))}">${out}</g>`:'')+renderLyricFocus(p,s,t,w,h,focus);
   const texture=s.performance?.enabled?textureRecipes.find(r=>r.id===s.performance?.texture):undefined;
