@@ -267,7 +267,7 @@ function captions(c:Ctx){
  const total=ws.reduce((a,w)=>a+(textWidth(w.text)+.61)*size,0);let x=(c.w-total)/2;
  return ws.map(w=>{
   const a=clamp((c.t-w.start+.16)/.26),y=c.h*.834+(1-easeOut(a))*12*c.u,color=c.t>=w.start&&c.t<w.end?c.accent:c.fg;
-  const result=txt(w.text,x,y,size,color,`opacity="${n(c.t>=w.start?.95:.21)}"`);x+=(textWidth(w.text)+.61)*size;return result;
+  const result=c.t>=w.start?txt(w.text,x,y,size,color,'opacity=".95"'):'';x+=(textWidth(w.text)+.61)*size;return result;
  }).join('');
 }
 function grain(c:Ctx,frame:number){
@@ -323,7 +323,7 @@ function sceneLayer(c:Ctx,frame:number,id:string){
  return out;
 }
 export function renderFrame(p:Project,frame:number,options?:{width?:number;height?:number}):string{
- const {width:w,height:h}=dimensions(p.format),u=Math.min(w,h)/1080,t=clamp(frame/p.fps,0,p.duration-.000001),s=sceneAt(p,t),c=context(p,s,t);
+ const {width:w,height:h}=dimensions(p.format),u=Math.min(w,h)/1080,t=clamp(frame/p.fps-(p.visualSyncOffsetSeconds??0),0,p.duration-.000001),s=sceneAt(p,t),c=context(p,s,t);
  const px=options?.width??w,py=options?.height??h;
  let out=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${px}" height="${py}" viewBox="0 0 ${w} ${h}"><defs><radialGradient id="red-haze"><stop stop-color="${c.accent}" stop-opacity=".13"/><stop offset="1" stop-color="${c.accent}" stop-opacity="0"/></radialGradient><radialGradient id="vignette"><stop offset=".4" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity=".57"/></radialGradient><pattern id="scan" width="4" height="${5*u}" patternUnits="userSpaceOnUse"><path d="M0 0 H${w}" stroke="#000000" stroke-width="${u}" opacity=".35"/></pattern><clipPath id="slice"><rect x="0" y="${n(h*(.25+rand(frame+81)*.5))}" width="${w}" height="${n((7+rand(frame)*23)*u)}"/></clipPath></defs><rect width="${w}" height="${h}" fill="${p.style.background}"/>`;
  const incoming=sceneLayer(c,frame,'world-current'),index=p.scenes.indexOf(s),duration=Math.min(transitionDuration(s.transition,p.analysis.bpm),(s.end-s.start)*.4),progress=duration?Math.max(clamp(c.local/duration),evaluateLyricFocus(p,s,t)?.amount??0):1;

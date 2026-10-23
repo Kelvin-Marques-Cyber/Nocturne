@@ -21,7 +21,7 @@ const actions:Record<Act,Action>={execute:'turn',permission:'hesitate',pressure:
 const functions:Record<Act,string>={execute:'await',permission:'if',pressure:'while',loop:'while',erase:'try',descend:'yield',call:'await',release:'return'};
 export function codeTheatre(c:Cue){
  const{p,s,t,w,h,u,fg,accent}=c,{lines,act}=plan(p,s);
- const activeIndex=Math.max(0,lines.reduce((last,line,index)=>t>=line[0].start-.12?index:last,-1)),current=lines[activeIndex]??[],anchor=current[0]?.start??s.start;
+ const activeIndex=Math.max(0,lines.reduce((last,line,index)=>t>=line[0].start?index:last,-1)),current=activeIndex>=0?lines[activeIndex]:[],anchor=current[0]?.start??s.start;
  const age=t-anchor,lineEnd=current.at(-1)?.end??s.end,progress=smooth((t-anchor)/Math.max(.4,lineEnd-anchor));
  const stroke=(d:string,color=fg,opacity=.4,width=1.4*u)=>`<path d="${d}" fill="none" stroke="${color}" stroke-width="${n(width)}" opacity="${n(opacity)}" stroke-linecap="round"/>`;
  const text=(value:string,x:number,y:number,size:number,color=fg,extra='')=>`<text x="${n(x)}" y="${n(y)}" font-family="${filmFont}" font-size="${n(size)}" fill="${color}" ${extra}>${esc(value)}</text>`;
@@ -56,7 +56,7 @@ export function codeTheatre(c:Cue){
   const px=w*.15,py=h*.33,pw=w*.7,ph=178*u,accept=smooth((age-.6)/1.15);
   out+=`<g transform="translate(0 ${n((1-smooth((age+.18)/.3))*-35*u)})"><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="3" fill="#0e0b0d" stroke="${accent}" stroke-opacity=".65"/>`;
   out+=text('permission.request()',px+21*u,py+33*u,19*u,fg,'opacity=".65"');
-  const sentence=current.map(word=>word.text).join(' '),size=Math.min(31*u,(pw-45*u)/Math.max(1,textWidth(sentence)));
+  const sentence=current.filter(word=>t>=word.start).map(word=>word.text).join(' '),size=Math.min(31*u,(pw-45*u)/Math.max(1,textWidth(sentence)));
   out+=text(sentence,px+21*u,py+84*u,size);
   for(let i=0;i<2;i++){const bx=px+pw*(i?.54:.05),bw=pw*.4;out+=`<rect x="${n(bx)}" y="${py+111*u}" width="${bw}" height="${43*u}" fill="${i?accent:'#231a1d'}" opacity="${n(i?.35+accept*.6:.6)}"/>`+text(i?'true':'false',bx+bw*.3,py+139*u,22*u);}
   out+='</g>';
@@ -70,18 +70,19 @@ export function codeTheatre(c:Cue){
  }else{
   // Preserve original words. Syntax is staged around them rather than
   // translating a multilingual lyric into hard-coded Portuguese labels.
-  const atY=h*.45,scroll=(activeIndex?activeIndex-1+smooth((age+.12)/.32):0)*71*u;
+  const atY=h*.45,scroll=(activeIndex>0?activeIndex-1+smooth(age/.32):0)*71*u;
   let code='';
   lines.forEach((line,row)=>{
-   if(row<activeIndex-1||row>activeIndex+2)return;
+   if(row<activeIndex-1||row>activeIndex)return; // Do not preview future lyric lines.
    const yy=atY+row*71*u-scroll,phrase=line.map(word=>word.text).join(' '),size=Math.min(41*u,w*.78/Math.max(1,textWidth(phrase)+2));
    let xx=w*.12;
    const opacity=row===activeIndex?1:row<activeIndex?.45:.16;
    code+=text(String(row+1).padStart(2,'0'),w*.065,yy,size*.43,fg,`opacity="${opacity*.38}"`);
    code+=text('//',xx,yy,size,accent,`opacity="${opacity*.85}"`);xx+=size*1.8;
    for(const word of line){
-    const spoken=t>=word.start,hit=t>=word.start&&t<word.end,enter=smooth((t-word.start+.12)/.22);
-    code+=text(word.text,xx,yy+(1-enter)*6*u,size,hit?accent:fg,`opacity="${n(opacity*(spoken?.98:.5))}"`);
+    if(t<word.start)continue; // Never show a word before its vocal onset.
+     const hit=t<word.end,enter=smooth((t-word.start)/.22);
+    code+=text(word.text,xx,yy+(1-enter)*6*u,size,hit?accent:fg,`opacity="${n(opacity*.98)}"`);
     if(hit)code+=`<rect x="${n(xx+textWidth(word.text)*size+4*u)}" y="${n(yy-size*.79)}" width="${4*u}" height="${size*.86}" fill="${accent}"/>`;
     xx+=(textWidth(word.text)+.61)*size;
    }

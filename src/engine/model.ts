@@ -23,7 +23,7 @@ export const filterTypes=textureKinds;
 export type FilterType=typeof filterTypes[number];
 export interface FilmFilter{id:string;type:FilterType;amount:number;enabled:boolean}
 export interface Style {name:'terminal-noir'|'chalk'|'signal'|'datamosh'|'acid-industrial'|'emerald';filters?:FilmFilter[];background:string;foreground:string;accent:string;grain:number;glitch:number;chromatic:number;vhs:number;captions:boolean}
-export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;direction?:'reel'|'worlds';lyricFocusPolicy?:'balanced-v1';seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
+export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;direction?:'reel'|'worlds';lyricFocusPolicy?:'balanced-v1';visualSyncOffsetSeconds?:number;seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
 const fx=(type:FilterType,amount:number):FilmFilter=>({id:type,type,amount,enabled:true});
 export const styles:Record<Style['name'],Style>={
  'terminal-noir':{name:'terminal-noir',background:'#08090b',foreground:'#e9e5dc',accent:'#ed3e43',grain:.22,glitch:.28,chromatic:.35,vhs:.16,captions:true},
@@ -48,6 +48,7 @@ export function validateProject(value:unknown): asserts value is Project {
  if(p.character?.design!==undefined&&!['ink','articulated'].includes(p.character.design))throw Error('Desenho inválido.');
  if(p.language!==undefined&&!Object.hasOwn(languages,p.language))throw Error('Idioma inválido.');
  if(p.lyricFocusPolicy!==undefined&&p.lyricFocusPolicy!=='balanced-v1')throw Error('Política de zoom inválida.');
+ if(p.visualSyncOffsetSeconds!==undefined&&(!finite(p.visualSyncOffsetSeconds)||Math.abs(p.visualSyncOffsetSeconds)>5))throw Error('Deslocamento visual deve estar entre -5 e +5 segundos.');
  if(!p.analysis||!Array.isArray(p.analysis.beats)||!Array.isArray(p.analysis.energy)||!finite(p.analysis.hopSeconds)||p.analysis.hopSeconds<=0)throw Error('Análise de áudio inválida.');
  if(p.analysis.voice){const v=p.analysis.voice,length=v.energy?.length;if(!['mix','isolated'].includes(v.source)||typeof v.method!=='string'||!length||length>Math.ceil(p.duration/p.analysis.hopSeconds)+3||[v.energy,v.presence,v.confidence,v.pitch].some(xs=>!Array.isArray(xs)||xs.length!==length||xs.some(x=>!finite(x)||x<0))||[v.energy,v.presence,v.confidence].some(xs=>xs.some(x=>x>1))||v.pitch.some(x=>x>2000))throw Error('Contorno vocal inválido.');}
  if(!p.style||!p.character||!finite(p.seed)||!finite(p.character.scale)||p.character.scale<=0||!finite(p.character.head)||!finite(p.character.thickness))throw Error('Personagem ou estilo inválido.');

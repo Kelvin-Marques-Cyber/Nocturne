@@ -16,7 +16,7 @@ function phraseFor(scene:Scene,words:Word[],anchor:Word){return words.filter(w=>
 // used a 1.7s duration. Preserve them when migrating untagged projects.
 const manualFocus=(event:SceneEvent)=>event.source==='manual'||event.source===undefined&&(event.delivery!==undefined||event.focusMode==='word'&&event.duration===1.7);
 function windowFor(scene:Scene,words:Word[],anchor:Word,event:SceneEvent){
- const line=phraseFor(scene,words,anchor),fast=event.focusMode==='word',start=Math.max(scene.start+.025,anchor.start-(fast?.12:.22));
+ const line=phraseFor(scene,words,anchor),start=Math.max(scene.start+.025,anchor.start);
  const lineEnd=line.at(-1)?.end??anchor.end,limit=anchor.start+(manualFocus(event)?event.duration:Math.min(4.2,event.duration));
  // Estimated timestamps can stretch one word across a long instrumental gap.
  // Only a manual cue may override its intended screen duration that way.
@@ -115,10 +115,12 @@ export function renderLyricFocus(p:Project,s:Scene,t:number,w:number,h:number,cu
  for(const item of layout){
   const{x,y,size,word}=item,startX=cursor,startY=h*(p.direction==='reel'?.4:.834);
   cursor+=(textWidth(word.text)+.61)*small;
+  // Animate the phrase without revealing any upcoming word.
+  if(t<word.start)continue;
   const sizeNow=mix(small,size,travel),target=project(x,y),dx=project(x+1,y),dy=project(x,y+1),xx=mix(startX,target[0],travel),yy=mix(startY,target[1],travel),isActive=word.id===active.id;
   const held=isActive&&(s.performance?.enabled??true)?wordSustain(p.analysis,word,t,cue.event.delivery)*(s.performance?.intensity??.7):0;
   const attack=clamp((t-word.start)/.11),width=typeWidth(word.text,type)/type.width*sizeNow,space=typeWidth(' ',type)*sizeNow,extension=held*Math.min(.14,space/Math.max(1,width*type.width)*.85),stretch=isActive?1+Math.sin(attack*Math.PI)*.035+extension:1;
-  const color=isActive?p.style.accent:p.style.foreground,alpha=t>=word.start?.98:.54;
+  const color=isActive?p.style.accent:p.style.foreground,alpha=.98;
   const lettering=`font-family="${type.face.family},Noto Sans CJK JP" font-kerning="none" font-weight="${type.face.weight}" font-style="${type.face.italic?'oblique':'normal'}" letter-spacing="${n(type.tracking*sizeNow)}" font-size="${n(sizeNow)}"`;
   out+=`<g ${held>.005?`data-held-word="${esc(word.id)}" data-hold-strength="${n(held)}"`:''} transform="matrix(${n(mix(1,dx[0]-target[0],travel))} ${n((dx[1]-target[1])*travel)} ${n((dy[0]-target[0])*travel)} ${n(mix(1,dy[1]-target[1],travel))} ${n(xx)} ${n(yy)})"><g transform="translate(${n(-width*type.width*(stretch-1)*.5)} 0) scale(${n(type.width*stretch)} 1)">`;
   if(held>.005)for(let echo=1;echo<=3;echo++)out+=`<text ${lettering} transform="translate(${n(-held*sizeNow*.025*echo)} ${n(Math.sin(t*3-echo*.65)*held*sizeNow*.018*echo)})" fill="none" stroke="${color}" stroke-width="${n(Math.max(.6*u,sizeNow*.007))}" opacity="${n(held*(.2-echo*.04))}">${esc(word.text)}</text>`;
