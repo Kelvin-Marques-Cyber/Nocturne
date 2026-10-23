@@ -22,7 +22,7 @@ export async function renderBrowserVideo(project:Project,options:BrowserRenderOp
  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const context=canvas.getContext('2d',{alpha:false});if(!context)throw Error('Canvas 2D indisponível.');
  const target=new BufferTarget(),output=new Output({format:new Mp4OutputFormat({fastStart:'in-memory'}),target}),video=new CanvasSource(canvas,{codec:'avc',quality:new Quality({bitrate:w*h*fps*.13}),keyFrameInterval:2}),audio=new AudioBufferSource({codec:'aac',quality:new Quality({bitrate:192000})});
  output.addVideoTrack(video,{frameRate:fps});output.addAudioTrack(audio);await output.start();
- const cache=new Map<string,string>(),total=Math.ceil(duration*fps);const image=new Image();
+ const cache=new Map<string,{d:string;width:number}>(),total=Math.ceil(duration*fps);const image=new Image();
  try{
   await audio.add(clip);audio.close();
   for(let frame=0;frame<total;frame++){
