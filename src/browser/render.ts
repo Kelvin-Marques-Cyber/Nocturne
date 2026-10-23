@@ -22,17 +22,42 @@ export async function renderBrowserVideo(project:Project,options:BrowserRenderOp
  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const context=canvas.getContext('2d',{alpha:false});if(!context)throw Error('Canvas 2D indisponível.');
  const target=new BufferTarget(),output=new Output({format:new Mp4OutputFormat({fastStart:'in-memory'}),target}),video=new CanvasSource(canvas,{codec:'avc',quality:new Quality({bitrate:w*h*fps*.13}),keyFrameInterval:2}),audio=new AudioBufferSource({codec:'aac',quality:new Quality({bitrate:192000})});
  output.addVideoTrack(video,{frameRate:fps});output.addAudioTrack(audio);await output.start();
- const cache=new Map<string,{d:string;width:number}>(),total=Math.ceil(duration*fps);const image=new Image();
+  const cache=new Map<string,{d:string;width:number}>(),total=Math.ceil(duration*fps);
+ let canUseBitmap=typeof createImageBitmap==='function';
+ type PreparedFrame={source:CanvasImageSource;dispose:()=>void};
+ async function prepareFrame(frame:number):Promise<PreparedFrame>{
+  const svg=outlineText(renderFrame(project,(from+frame/fps)*project.fps,{width:w,height:h}),fonts,cache);
+  const blob=new Blob([svg],{type:'image/svg+xml'});
+  // Decode ahead when the browser supports bitmap decoding; don't keep many
+  // large RGBA frames alive (a 1080p bitmap is about 8MB).
+  if(canUseBitmap){
+   try{const bitmap=await createImageBitmap(blob);return{source:bitmap,dispose:()=>bitmap.close()};}
+   catch{canUseBitmap=false;}
+  }
+  const url=URL.createObjectURL(blob),image=new Image();
+  try{
+   await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(Error('Falha ao desenhar um quadro SVG.'));image.src=url;});
+   return{source:image,dispose:()=>URL.revokeObjectURL(url)};
+  }catch(error){URL.revokeObjectURL(url);throw error;}
+ }
+ let prepared:Promise<PreparedFrame>|undefined;
+ const startPrepare=(frame:number)=>{const result=prepareFrame(frame);void result.catch(()=>{});return result;};
  try{
   await audio.add(clip);audio.close();
+  prepared=startPrepare(0);
   for(let frame=0;frame<total;frame++){
    if(options.signal?.aborted)throw Error('Renderização cancelada.');
-   const svg=outlineText(renderFrame(project,(from+frame/fps)*project.fps,{width:w,height:h}),fonts,cache),url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
-   try{await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(Error('Falha ao desenhar um quadro SVG.'));image.src=url;});context.drawImage(image,0,0,w,h);}finally{URL.revokeObjectURL(url);}
+   const current=await prepared;
+   prepared=frame+1<total?startPrepare(frame+1):undefined;
+   try{context.drawImage(current.source,0,0,w,h);}finally{current.dispose();}
    await video.add(frame/fps,Math.min(1/fps,duration-frame/fps));
    if(frame%12===0||frame===total-1){options.onProgress?.((frame+1)/total*100);await new Promise<void>(r=>setTimeout(r,0));}
    if(cache.size>2500)cache.clear();
   }
   video.close();await output.finalize();if(!target.buffer)throw Error('MP4 não foi finalizado.');return new Blob([target.buffer],{type:'video/mp4'});
- }catch(error){await output.cancel();throw error;}
+ }catch(error){
+  // The ahead-of-time rasterization may already have a decoded bitmap.
+  if(prepared)try{(await prepared).dispose();}catch{}
+  await output.cancel();throw error;
+ }
 }
