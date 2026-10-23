@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Kelvin e Silva Marques
 import type {Analysis,Word,SceneEvent} from './model';
-import {clamp,sample} from './math';
+import {clamp,sample,smooth} from './math';
 export const deliveries=['auto','neutral','shout','whisper','rising','sustained'] as const;
 export type Delivery=typeof deliveries[number];
 export const deliveryLabels:Record<Delivery,string>={auto:'Automática pela voz',neutral:'Natural',shout:'Grito / ênfase forte',whisper:'Suave / íntima',rising:'Crescendo',sustained:'Nota sustentada'};
@@ -38,3 +38,23 @@ export function vocalDelivery(a:Analysis,words:Word[],override:Delivery='auto'):
 }
 export function lineDelivery(a:Analysis,words:Word[],events:SceneEvent[]=[]){const override=events.find(e=>e.type==='focus'&&e.delivery&&e.delivery!=='auto'&&words.some(w=>w.id===e.wordId))?.delivery;return vocalDelivery(a,words,override);}
 export function voiceLevel(a:Analysis,t:number){return a.voice?clamp((sample(a.voice.energy,a.hopSeconds,t-.04)+2*sample(a.voice.energy,a.hopSeconds,t)+sample(a.voice.energy,a.hopSeconds,t+.04))/4):0;}
+
+// Word timing owns the effect's lifetime. Repeated letters are an optional
+// lyrical hint; an ordinary spelling also works when its vocal note is held.
+export function wordSustain(a:Analysis,word:Word,t:number,override:Delivery='auto'){
+ const duration=word.end-word.start,age=t-word.start;
+ if(age<0||t>=word.end||duration<.6||override==='neutral')return 0;
+ const repeated=/(\p{L})\1{2,}/iu.test(word.text.normalize('NFC'));
+ if(override!=='sustained'&&!repeated&&duration<Math.max(1.05,Math.min(1.5,96/(a.bpm||120))))return 0;
+ let presence=1;
+ if(a.voice&&override!=='sustained'){
+  const v=a.voice,from=Math.floor(word.start/a.hopSeconds),to=Math.ceil(word.end/a.hopSeconds);let voiced=0,run=0,longest=0;
+  for(let i=from;i<to;i++){if(v.presence[i]>.18&&v.confidence[i]>.2&&v.energy[i]>.015){voiced++;run++;longest=Math.max(longest,run);}else run=0;}
+  if(voiced/Math.max(1,to-from)<.65||longest*a.hopSeconds<Math.min(.45,duration*.35))return 0;
+  presence=smooth((sample(v.presence,a.hopSeconds,t)-.15)/.25)*smooth((sample(v.confidence,a.hopSeconds,t)-.15)/.25)*smooth(voiceLevel(a,t)/.06);
+ }
+ const delivery=vocalDelivery(a,[word]);
+ if(override!=='sustained'&&!repeated&&(delivery.source!=='spectral'||delivery.sustain<.72))return 0;
+ const envelope=Math.min(smooth(age/.2),smooth((word.end-t)/.16));
+ return presence*envelope*(.3+.7*smooth(age/duration))*(a.voice?.energy.length?.45+.55*voiceLevel(a,t):.65);
+}

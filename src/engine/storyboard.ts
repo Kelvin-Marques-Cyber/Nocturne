@@ -4,10 +4,21 @@ import type {Project,Scene,SceneKind,Action,Word,Analysis,Motion} from './model'
 import {styles} from './model';
 import {planLyricFocus} from './focus';
 import {analyzeMeaning,wordEmphasis} from './semantics';
-import {tokenizeLyrics,type Language} from './language';
+import {tokenizeLyrics,lyricContent,type Language} from './language';
 import {directTransitions} from './transitions';
 import {directPerformance} from './director';
 export const metaphors:Record<SceneKind,{label:string;intent:string;code:string;action:Action;accent:string}>= {
+ bridge:{label:'Travessia suspensa',intent:'Uma ponte liga duas margens; cada passo faz vibrar os cabos e revela um caminho possível.',code:'atravessar(medo);',action:'walk',accent:'TRAVESSIA'},
+ forest:{label:'Entre as árvores',intent:'Troncos e ramos passam em camadas; uma abertura de luz orienta o corpo na busca.',code:'buscar(caminho);',action:'turn',accent:'CAMINHO'},
+ city:{label:'Sozinho na cidade',intent:'Janelas se acendem em planos de profundidade; o corpo procura presença na arquitetura.',code:'cidade.encontrar(eu);',action:'idle',accent:'PRESENÇA'},
+ desert:{label:'O peso da sede',intent:'Dunas atravessam o horizonte; o corpo avança em uma paisagem de linhas e vento.',code:'continuar(sem_respostas);',action:'walk',accent:'CONTINUAR'},
+ staircase:{label:'Um degrau de cada vez',intent:'Degraus revelam uma subida; a figura se eleva junto ao próprio apoio, sem deslizar no piso.',code:'esperança += passo;',action:'idle',accent:'ADIANTE'},
+ cage:{label:'O espaço que aprisiona',intent:'Grades se abrem lentamente em torno da figura; a mão procura o intervalo entre as barras.',code:'abrir(limites);',action:'reach',accent:'LIBERDADE'},
+ eclipse:{label:'A luz retorna',intent:'Um disco atravessa a luz e deixa surgir uma coroa; o personagem observa a mudança de escala.',code:'luz.atravessar(sombra);',action:'idle',accent:'LUZ'},
+ prism:{label:'Uma voz, muitas cores',intent:'Uma linha de luz encontra um prisma e se divide em feixes que respiram com o som.',code:'refratar(sentir);',action:'reach',accent:'TRANSFORMAR'},
+ guitar:{label:'Guitarra expressiva',intent:'O boneco segura o braço da guitarra e palheta as cordas conforme as batidas e a energia do áudio.',code:'guitarra.tocar(batida);',action:'hold',accent:'AMPLIFICAR'},
+ piano:{label:'Piano de palavras',intent:'As mãos percorrem um teclado; teclas e reflexos respondem aos ataques do áudio.',code:'piano.tocar(frase);',action:'hold',accent:'RESSOAR'},
+ drums:{label:'Bateria de impulsos',intent:'Baquetas articuladas encontram tambores e pratos; cada batida movimenta mãos e membranas.',code:'bateria.marcar(pulso);',action:'hold',accent:'PULSO'},
  constellation:{label:'Mapa do invisível',intent:'As estrelas se conectam ao pequeno coração; a escala do céu revela a fragilidade humana.',code:'const céu = conectar(estrelas);',action:'reach',accent:'CONSTELAÇÕES'},
  heart:{label:'O que está dentro',intent:'O peito vira uma janela de código e o coração permanece visível mesmo atrás do corpo.',code:'Deus.vê(coração);',action:'hold',accent:'CORAÇÕES'},
  corridor:{label:'A fuga dobra o espaço',intent:'O corpo corre, mas o corredor retorna ao ponto de partida; as palavras fecham a saída.',code:'while (eu.fujo()) mundo.voltar();',action:'run',accent:'FUGIR'},
@@ -44,7 +55,7 @@ function motions(kind:SceneKind,start:number,end:number):Motion[]{
 }
 export function createStoryboard(lyrics:string,words:Word[],a:Analysis,language:Language='auto'):Scene[]{
  const filmLanguage=language==='auto'?analyzeMeaning(lyrics).language:language;
- const stanzas=lyrics.split(/\n\s*\n/).filter(s=>s.trim());let cursor=0;
+ const stanzas=lyricContent(lyrics).text.split(/\n\s*\n/).filter(s=>s.trim());let cursor=0;
  const groups=stanzas.map((text,i)=>{const count=tokenizeLyrics(text,language).length,ws=words.slice(cursor,cursor+count);cursor+=count;return{text,ws,i};});
  if(!groups.length)groups.push({text:'',ws:[],i:0});
  const motifs=new Map<SceneKind,number>();

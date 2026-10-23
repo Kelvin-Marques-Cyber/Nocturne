@@ -2,7 +2,7 @@
 // Copyright 2026 Kelvin e Silva Marques
 import type{FilmFilter,FilterType}from'./model';
 import{n,rand,clamp}from'./math';
-export const filterLabels:Record<FilterType,string>={monochrome:'Preto e branco',duotone:'Visão esmeralda',contrast:'Contraste',invert:'Negativo',posterize:'Posterização',bloom:'Difusão de luz',chromatic:'Separação RGB',datamosh:'Ruptura digital',halftone:'Retícula',scanlines:'Varredura analógica',vignette:'Vinheta',letterbox:'Barras de cinema',hazard:'Faixas industriais',hud:'Interface de rastreamento'};
+export const filterLabels:Record<FilterType,string>={monochrome:'Preto e branco',duotone:'Visão esmeralda',contrast:'Contraste',invert:'Negativo',posterize:'Posterização',bloom:'Difusão de luz',chromatic:'Separação RGB',datamosh:'Ruptura digital',halftone:'Retícula',scanlines:'Varredura analógica',vignette:'Vinheta',letterbox:'Barras de cinema',hazard:'Faixas industriais',hud:'Interface de rastreamento',sepia:'Memória sépia',cyanotype:'Cianotipia',thermal:'Mapa térmico',solarize:'Solarização',ink:'Tinta de alto contraste',emboss:'Relevo',softfocus:'Foco suave',filmgrain:'Grão de película',dust:'Poeira de projetor',scratches:'Riscos de filme',grid:'Grade técnica',lightleak:'Vazamento de luz'};
 export const styleLabels:Record<string,string>={'terminal-noir':'Terminal noir',chalk:'Giz',signal:'Sinal vermelho',datamosh:'Sinal corrompido','acid-industrial':'Industrial ácido',emerald:'Esmeralda'};
 export const filter=(type:FilterType,amount:number,id:string=type):FilmFilter=>({id,type,amount,enabled:true});
 interface EffectClock{width:number;height:number;frame:number;seed:number;energy:number;beat:number;focus:number;namespace?:string;}
@@ -20,6 +20,27 @@ export function applyEffects(svg:string,filters:FilmFilter[],clock:EffectClock){
   if(f.type==='invert')color(`<feComponentTransfer>${['R','G','B'].map(c=>`<feFunc${c} type="table" tableValues="${amount} ${1-amount}"/>`).join('')}</feComponentTransfer>`);
   if(f.type==='posterize'){const steps=Math.round(9-amount*6),values=Array.from({length:steps},(_,i)=>n(i/(steps-1))).join(' ');color(`<feComponentTransfer>${['R','G','B'].map(c=>`<feFunc${c} type="discrete" tableValues="${values}"/>`).join('')}</feComponentTransfer>`);}
   if(f.type==='bloom')color(`<feGaussianBlur stdDeviation="${n(amount*3.5*u)}" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>`);
+  if(f.type==='sepia'){
+   const sepia=[.393,.769,.189,0,0,.349,.686,.168,0,0,.272,.534,.131,0,0,0,0,0,1,0],identity=[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0];
+   color(`<feColorMatrix values="${sepia.map((v,i)=>n(identity[i]+(v-identity[i])*amount)).join(' ')}"/>`);
+  }
+  if(f.type==='cyanotype')color(`<feColorMatrix values="${1-amount*.85} 0 0 0 0 0 ${1-amount*.4} 0 0 ${amount*.025} 0 0 1 0 ${amount*.09} 0 0 0 1 0"/>`);
+  if(f.type==='thermal'||f.type==='solarize'||f.type==='ink'){
+   const maps=f.type==='thermal'?[[0,.1,.8,1,1],[0,.2,.05,.7,1],[.16,.8,.4,0,.8]]:f.type==='solarize'?[[0,.7,1,.4,0],[0,.7,1,.4,0],[0,.7,1,.4,0]]:[[0,0,.9,1,1],[0,0,.9,1,1],[0,0,.9,1,1]];
+   color((f.type==='thermal'||f.type==='ink'?'<feColorMatrix type="saturate" values="0"/>':'')+`<feComponentTransfer>${['R','G','B'].map((c,i)=>`<feFunc${c} type="${f.type==='ink'?'discrete':'table'}" tableValues="${maps[i].map((v,j)=>n(j/4*(1-amount)+v*amount)).join(' ')}"/>`).join('')}</feComponentTransfer>`);
+  }
+  if(f.type==='emboss')color(`<feConvolveMatrix order="3" kernelMatrix="-2 -1 0 -1 1 1 0 1 2" divisor="1" bias=".4" preserveAlpha="true" result="relief"/><feComposite in="relief" in2="SourceGraphic" operator="arithmetic" k2="${n(amount)}" k3="${n(1-amount)}"/>`);
+  if(f.type==='softfocus')color(`<feGaussianBlur stdDeviation="${n(Math.max(.6,amount*2*u))}" result="soft"/><feComposite in="soft" in2="SourceGraphic" operator="arithmetic" k2="${n(amount*.7)}" k3="${n(1-amount*.7)}"/>`);
+  if(f.type==='filmgrain'||f.type==='dust'||f.type==='scratches'){
+   const tick=Math.floor(frame/(f.type==='filmgrain'?3:6)),count=f.type==='filmgrain'?100:f.type==='dust'?20:7;let marks='';
+   for(let i=0;i<count;i++){
+    const x=rand(seed+tick*71+i*173)*w,y=rand(seed+tick*37+i*43)*h;
+    if(f.type==='scratches')marks+=`<path d="M${n(x)} ${n(y)}l${n((rand(i+tick)-.5)*7*u)} ${n((30+rand(i*19+tick)*100)*u)}" stroke="#f0e9d8" stroke-width="${n(.8*u)}" fill="none"/>`;
+    else marks+=`<circle cx="${n(x)}" cy="${n(y)}" r="${n((f.type==='dust'?.8+rand(i+tick)*2.5:.5+rand(i+tick))*u)}" fill="${i%2?'#f0e9d8':'#000000'}"/>`;
+   }body+=`<g opacity="${n(motion*(f.type==='filmgrain'?.32:.5))}">${marks}</g>`;
+  }
+  if(f.type==='grid'){defs+=`<pattern id="${id}" width="${64*u}" height="${64*u}" patternUnits="userSpaceOnUse"><path d="M${64*u} 0H0V${64*u}" fill="none" stroke="#b1d9df" stroke-width="${u}"/></pattern>`;body+=`<rect width="${w}" height="${h}" fill="url(#${id})" opacity="${n(motion*.35)}"/>`;}
+  if(f.type==='lightleak'){defs+=`<linearGradient id="${id}"><stop stop-color="#ff6c32" stop-opacity="${n(motion*(.2+energy*.25+beat*.15))}"/><stop offset=".5" stop-color="#ff6c32" stop-opacity="0"/><stop offset="1" stop-color="#417bca" stop-opacity="${n(motion*.18)}"/></linearGradient>`;body+=`<rect width="${w}" height="${h}" fill="url(#${id})"/>`;}
   if(f.type==='chromatic'){
    const shift=amount*(1+beat*2)*3*u;
    color(`<feColorMatrix values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="red"/><feOffset in="red" dx="${n(shift)}" result="r"/><feColorMatrix in="SourceGraphic" values="0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" result="cyan"/><feOffset in="cyan" dx="${n(-shift)}" result="c"/><feBlend in="r" in2="c" mode="screen"/>`);

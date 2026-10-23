@@ -28,3 +28,7 @@ A pesquisa online do Refero estava indisponível (assinatura inativa). Foram usa
 ## Critérios de aceitação
 
 Mesma letra com voz suave e intensa produz direções diferentes. Bateria isolada não deve ser suficiente para marcar grito. A frase inteira cabe nos dois formatos durante a rotação, inclusive com acentos/CJK e linhas longas. Corpo mantém os pés apoiados, articulações contínuas e contatos com objetos. Projetos antigos abrem, exports funcionam e o mesmo tempo/seed produz o mesmo quadro em qualquer ordem.
+
+## Ampliação do palco — 23/10/2026
+
+Direção preservada: `reference-analysis.md`, corpo de poucos traços, código como acontecimento e acento vermelho. As recomendações de movimento do Refero orientam continuidade, contenção e hierarquia; efeitos de poeira e luz recuam durante a leitura ampliada. Novos cenários são geometrias SVG determinísticas no mesmo renderizador. Instrumentos recebem contatos de mão no espaço do personagem; não adicionam dança ao corpo. Fontes Latin Modern fornecem contraste entre sans humanista, romano, itálico e mono leve com métricas reais. No celular, os prints fornecidos mostram o problema de colunas e painéis de altura fixa; a correção oferece uma superfície por vez e rolagem de documento.

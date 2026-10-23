@@ -16,3 +16,63 @@
 .catalog-count span{font-size:11px;line-height:1.5;color:#b6adb3}
 .performance-panel .secondary{margin-bottom:8px}
 .selected-phrase{font-size:13px;line-height:1.6;color:#eee9e4;overflow-wrap:anywhere}
+.mobile-nav{display:none}
+/* A phone edits one surface at a time. Document scrolling keeps focused
+   fields and their actions reachable when the software keyboard opens. */
+@media(max-width:760px){
+ html,body,#root{min-width:0;width:100%}
+ .studio{min-height:100svh;max-width:100%;padding-bottom:env(safe-area-inset-bottom)}
+ .topbar{height:auto;min-height:72px;display:grid;grid-template-columns:1fr;gap:10px;padding:12px 14px}
+ .brand{font-size:12px;gap:9px;min-width:0}.brand small{display:none}.brand-mark{height:28px;width:28px;font-size:24px}
+ .project-title{display:none}.top-actions{margin:0;min-width:0;width:100%;gap:6px;flex-wrap:wrap}
+ .top-actions button{min-height:44px}.top-actions .save{display:inline-flex;font-size:12px;margin:0;gap:6px}.top-actions .primary{margin-left:auto;font-size:12px;padding:10px}
+ .mobile-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:sticky;top:0;z-index:12;background:#111216;border-bottom:1px solid var(--line);padding:0 8px}
+ .mobile-nav button{min-height:48px;padding:8px 3px;border-radius:0;font-size:12px;color:#a0a4af;border-bottom:2px solid transparent}
+ .mobile-nav button[aria-pressed=true]{color:#f3e9e9;border-color:var(--red);background:#22191d}
+ .workspace,.workspace:has(.inspector){display:flex;flex-direction:column;height:auto;min-height:0;max-height:none;width:100%}
+ .studio .main-panel,.studio .left-panel,.studio .inspector{display:none;order:initial;width:100%;height:auto;min-height:0;max-height:none;overflow:visible;border-left:0;border-right:0}
+ .studio[data-mobile-pane=preview] .main-panel{display:flex}
+ .studio[data-mobile-pane=scenes] .left-panel,.studio[data-mobile-pane=lyrics] .left-panel,.studio[data-mobile-pane=source] .left-panel{display:flex}
+ .studio[data-mobile-pane=settings] .inspector{display:flex}
+ .tabs,.left-footer{display:none}
+ .inspector-scroll{display:block;max-height:none;overflow:visible;width:100%}
+ .inspector section{width:100%;min-width:0;flex:none;padding:20px 16px}
+ .inspector-heading{min-height:48px;font-size:11px}
+ h3{font-size:14px;margin-bottom:18px}.field{font-size:13px;gap:8px;margin-bottom:17px}
+ .field input,.field select,.field textarea,.field .mono,select,input,textarea{font-size:16px;min-height:44px;max-width:100%;padding:10px}
+ .field textarea{line-height:1.6}.check{font-size:13px;min-height:44px;margin-top:9px}.check input{min-height:22px;width:22px;height:22px;padding:0;flex-shrink:0}
+ .slider{margin:18px 0}.slider>span{font-size:13px}.slider b{font-size:12px}input[type=range]{height:32px;min-height:32px;padding:0;margin-top:8px}
+ .color-control{font-size:13px}.color-control input{width:52px;height:44px;padding:3px}
+ .two-fields{gap:12px}.inspector section .two-fields{gap:12px}
+ .style-picks{grid-template-columns:repeat(2,minmax(0,1fr))}.style-picks button{font-size:12px;min-height:44px;overflow-wrap:anywhere}
+ .primary,.secondary{min-height:44px;font-size:13px;line-height:1.4}
+ .note{font-size:12px;line-height:1.65;overflow-wrap:anywhere}.catalog-count b{font-size:27px;overflow-wrap:anywhere}.catalog-count span{font-size:12px}
+ .filter-row button{min-width:44px;min-height:44px}
+ .lyrics-panel,.source-panel{height:auto;overflow:visible;padding:0 16px 20px}
+ .panel-heading{font-size:11px;padding:18px 0 14px;gap:8px}.panel-heading button{font-size:12px;min-height:44px}
+ .lyrics{font:16px/1.65 'DejaVu Mono',monospace;min-height:200px;height:52svh;max-height:600px;width:100%;padding:12px;scroll-margin-top:70px}
+ .alignment-meter>span,.alignment-meter small{font-size:11px}.import-box{height:160px}.import-box b{font-size:15px}.import-box small{font-size:11px}
+ .audio-file{min-width:0}.audio-file b{font-size:14px;overflow-wrap:anywhere}.audio-file small{font-size:12px}
+ .scene-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;padding:0 12px 18px;gap:10px}
+ .scene-card{width:100%;min-width:0;max-width:none;height:auto;min-height:174px;flex-direction:column;align-items:stretch;gap:10px;padding:10px}
+ .scene-art{width:100%;height:84px}.scene-card-text b{font-size:12px;white-space:normal}.scene-card-text>span{font-size:10px}.scene-card-text small{display:none}
+ .preview-toolbar{height:auto;min-height:56px;flex-wrap:wrap;padding:12px;gap:10px}.preview-toolbar>div:first-child{font-size:10px;letter-spacing:.5px}.preview-toolbar>div:first-child span{font-size:10px}
+ .preview-toolbar>div:last-child{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,.7fr);width:100%;gap:6px}
+ .preview-toolbar select{font-size:12px;padding:8px 5px;min-width:0;width:100%;min-height:44px}
+ .preview-area{height:auto;min-height:0;flex:none;padding:36px 16px}
+ .film-frame{height:auto;max-height:none;width:min(100%,calc(clamp(280px,70svh,600px)*.5625));max-width:100%}
+ .preview-area.horizontal .film-frame{height:auto;width:100%;max-height:none}
+ .monitor-meta{font-size:8px;left:14px;right:14px;letter-spacing:.2px}.monitor-meta>span:last-child{display:none}
+ .preview-caption{font-size:10px;left:14px;right:14px;gap:10px}.preview-caption>span:first-child{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+ .import-banner{font-size:12px;padding:10px 12px;gap:8px}.import-banner button{min-height:44px;font-size:12px;flex-shrink:0}
+ .transport{height:auto;min-height:64px;gap:8px;padding:8px 12px;flex-wrap:wrap}.time-now{font-size:12px}.time-now span{font-size:10px}
+ .play-controls{gap:6px}.play-controls button,.play-controls .play{width:44px;height:44px;padding:10px}
+ .studio:not([data-mobile-pane=preview]):not([data-mobile-pane=scenes]) .timeline,.studio:not([data-mobile-pane=preview]):not([data-mobile-pane=scenes]) .wordbar{display:none}
+ .timeline{height:auto;min-height:159px;overflow:hidden}.timeline-header{height:auto;min-height:42px;padding:8px 12px}.timeline-header b{font-size:10px}.timeline-header>div>span{font-size:9px}
+ .timeline-body{padding-right:12px;overflow-x:auto}.track-labels{width:63px;padding:0 8px}.tracks{min-width:480px}.ruler span{font-size:9px}.scene-track button{font-size:10px}
+ .wordbar{height:auto;gap:10px;padding:14px 12px;flex-wrap:wrap}.wordbar>div:first-child{flex-basis:100%}.tiny-label{font-size:10px}.word-chips button{min-height:44px;font-size:13px;padding:8px}
+ .word-time{width:100%;justify-content:flex-end;gap:12px}.word-time>span{font-size:9px}.word-time label{font-size:12px}.word-time input{font-size:16px;width:85px;min-height:44px}
+ .statusbar{height:auto;min-height:42px;padding:10px 12px;font-size:11px;line-height:1.5;overflow-wrap:anywhere}.statusbar>span:last-child{display:none}
+ .modal-backdrop{padding:12px;overflow-y:auto}.export-modal{max-height:calc(100dvh - 24px);overflow-y:auto;padding:24px 18px}.export-modal .close{min-width:44px;min-height:44px;top:6px;right:6px}
+ .export-modal>p{font-size:11px}.export-specs{gap:12px;flex-wrap:wrap}.export-specs>span{font-size:12px}.export-specs small{font-size:9px}.export-modal .field select{font-size:16px}
+}

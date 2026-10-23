@@ -11,7 +11,8 @@ import {applyEffects} from './effects';
 import {filmFont,textWidth,joinWords} from './language';
 import {expressivePose} from './expression';
 import {textureRecipes} from './catalog';
-import {beatAccents} from './beat';
+import {beatAccents,beatResponse} from './beat';
+import {stageWorlds} from './stage';
 
 export function sceneAt(p:Project,t:number){return p.scenes.find(s=>t>=s.start&&t<s.end)??(t<p.scenes[0].start?p.scenes[0]:p.scenes.at(-1)!);}
 export function activeWord(p:Project,t:number){return p.words.find(w=>t>=w.start&&t<w.end);}
@@ -253,7 +254,7 @@ function clock(c:Ctx){
  out+=line(x,y,x+Math.sin(angle/12)*r*.5,y-Math.cos(angle/12)*r*.5,c.fg,.7,3*c.u);
  out+=hero(c,c.w*.3,c.ground,1.4)+wordObject(c,c.s.accent,c.w*.5,c.h*.23,c.w*.08,clamp(c.local));return out;
 }
-const worlds={constellation,heart,corridor,choice,echo,hide,soul,fall,denial,orbit,rest,terminal,ocean,door,lift,television,tunnel3d,mirror,storm,clock};
+const worlds={constellation,heart,corridor,choice,echo,hide,soul,fall,denial,orbit,rest,terminal,ocean,door,lift,television,tunnel3d,mirror,storm,clock,...stageWorlds(hero,wordObject)};
 
 function captions(c:Ctx){
  if(!c.p.style.captions||!c.words.length)return'';
@@ -277,7 +278,7 @@ function grain(c:Ctx,frame:number){
 }
 function context(p:Project,s:Scene,t:number):Ctx{
  const {width:w,height:h}=dimensions(p.format),u=Math.min(w,h)/1080,local=t-s.start,q=clamp(local/(s.end-s.start));
- const beat=pulse(t,nearestBefore(p.analysis.beats,t),.14),energy=sample(p.analysis.energy,p.analysis.hopSeconds,t);
+ const beat=beatResponse(p.analysis,t),energy=sample(p.analysis.energy,p.analysis.hopSeconds,t);
  const impact=Math.max(pulse(t,nearestBefore(p.analysis.impacts,t),.1)*.45,...s.events.filter(e=>e.type==='impact').map(e=>pulse(t,e.at,.15)*e.strength),0);
  return{p,s,t,local,q,w,h,u,ground:h*.735,beat,energy,impact,accent:p.style.accent,fg:p.style.foreground,words:p.words.filter(w=>s.wordIds.includes(w.id))};
 }

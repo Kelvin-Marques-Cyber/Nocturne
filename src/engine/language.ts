@@ -30,7 +30,12 @@ export function tokenizeLine(text:string,language:Language='auto'):string[]{
  if(prefix&&out.length)out[out.length-1]+=prefix;
  return out;
 }
-export function tokenizeLyrics(text:string,language:Language='auto'):LyricToken[]{return text.split('\n').flatMap((line,i)=>tokenizeLine(line,language).map(text=>({text,line:i})));}
+export function lyricContent(text:string){
+ const lines=text.split('\n'),section=(line:string)=>/^\s*\[[^\]\n]+\]\s*$/.test(line),firstSection=lines.findIndex(section),prefix=lines.slice(0,Math.max(0,firstSection)).map((s,i)=>({s:s.trim(),i})).filter(x=>x.s);
+ const title=prefix.length===1&&/\p{L}/u.test(prefix[0].s)&&prefix[0].s===prefix[0].s.toUpperCase()?prefix[0]:undefined;
+ return{text:lines.map((line,i)=>section(line)||i===title?.i?'':line).join('\n'),title:title?.s};
+}
+export function tokenizeLyrics(text:string,language:Language='auto'):LyricToken[]{return lyricContent(text).text.split('\n').flatMap((line,i)=>tokenizeLine(line,language).map(text=>({text,line:i})));}
 export function glyphWidth(char:string){return /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(char)?1:.61;}
 export function textWidth(text:string){return[...text.normalize('NFC')].reduce((sum,c)=>sum+( /\p{M}/u.test(c)?0:glyphWidth(c)),0);}
 export const joinWords=(words:{text:string}[])=>words.map((w,i)=>w.text+(i<words.length-1&&!( /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(w.text)&&/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(words[i+1].text))?' ':'')).join('');

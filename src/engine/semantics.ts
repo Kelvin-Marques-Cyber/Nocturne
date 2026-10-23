@@ -7,6 +7,18 @@ interface Concept{id:string;kind:SceneKind;weight:number;focus:number;terms:Lexi
 // Deliberately inspectable vocabulary, not a claim of general language
 // understanding. Phrases outrank isolated nouns; mixed-language songs work too.
 export const concepts:Concept[]=[
+ {id:'bridge',kind:'bridge',weight:32,focus:14,terms:{pt:'ponte|travessia|atravessar',en:'bridge|crossing over',es:'puente|travesía'}},
+ {id:'forest',kind:'forest',weight:32,focus:12,terms:{pt:'floresta|bosque|árvores',en:'forest|woods|trees',es:'bosque|árboles'}},
+ {id:'city',kind:'city',weight:32,focus:12,terms:{pt:'cidade|avenida|multidão',en:'city|avenue|crowd',es:'ciudad|avenida|multitud'}},
+ {id:'desert',kind:'desert',weight:32,focus:14,terms:{pt:'deserto|areia|sede',en:'desert|sand|thirst',es:'desierto|arena|sed'}},
+ {id:'staircase',kind:'staircase',weight:32,focus:14,terms:{pt:'escadaria|escada|degraus',en:'staircase|stairs|steps ahead',es:'escalera|peldaños'}},
+ {id:'cage',kind:'cage',weight:32,focus:15,terms:{pt:'gaiola|correntes|prisão',en:'cage|chains|prison',es:'jaula|cadenas|prisión'}},
+ {id:'eclipse',kind:'eclipse',weight:32,focus:14,terms:{pt:'eclipse|escuridão',en:'eclipse|darkness',es:'eclipse|oscuridad'}},
+ {id:'prism',kind:'prism',weight:32,focus:13,terms:{pt:'prisma|refratar|espectro',en:'prism|refraction|spectrum',es:'prisma|refracción|espectro'}},
+ {id:'guitar',kind:'guitar',weight:40,focus:12,terms:{pt:'guitarra|violão',en:'guitar|guitars|guitar solo',es:'guitarra'}},
+ {id:'piano',kind:'piano',weight:40,focus:12,terms:{pt:'piano|teclado',en:'piano|keyboard',es:'piano|teclado'}},
+ {id:'drums',kind:'drums',weight:40,focus:12,terms:{pt:'bateria|tambores|tambor',en:'drums|drummer|drum solo',es:'batería|tambores'}},
+ {id:'farewell',kind:'bridge',weight:26,focus:12,terms:{pt:'adeus|despedida',en:'goodbye|farewell',es:'adiós|despedida'}},
  {id:'rest',kind:'rest',weight:28,focus:17,terms:{pt:'descansar|descanso|não preciso controlar|não preciso entender|paz',en:'rest|resting|peace|let go|surrender',es:'descansar|descanso|paz|soltar el control',ja:'休む|休める|安らぎ|手放す',ko:'쉬다|쉬고|쉴|휴식|평화',ru:'отдохнуть|отдых|покой|отпустить',fr:'repos|reposer|paix|lâcher prise',de:'ruhen|ruhe|frieden|loslassen',it:'riposare|riposo|pace',zh:'休息|安息|平静|放下'}},
  {id:'ocean',kind:'ocean',weight:30,focus:14,terms:{pt:'afundou|afundar|afundo|afundando|oceano|mar|água',en:'drown|drowning|sink|sinking|ocean|underwater',es:'hundir|hundió|me hundo|océano|agua',ja:'沈む|沈んだ|溺れる|海',ko:'가라앉|바다|물속|익사',ru:'тону|тонуть|утонул|океан|под водой',fr:'couler|noyer|océan',de:'sinken|ertrinken|ozean',it:'affondare|annegare|oceano',zh:'沉没|下沉|溺水|海洋'}},
  {id:'threshold',kind:'door',weight:29,focus:13,terms:{pt:'permissão|entrar|porta|acesso negado',en:'access denied|permission|enter|door|locked out',es:'permiso|entrar|puerta|acceso denegado',ja:'立入禁止|許可|入れない|扉',ko:'허가|출입 금지|들어갈|문이',ru:'нет доступа|разрешение|войти|дверь|заперто',fr:'permission|entrer|porte|accès refusé',de:'zugang verweigert|erlaubnis|tür',it:'permesso|entrare|porta|accesso negato',zh:'拒绝访问|许可|进不去|门'}},

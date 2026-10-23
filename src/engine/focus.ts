@@ -5,7 +5,7 @@ import{normalize}from'./model';
 import{wordEmphasis,analyzeMeaning}from'./semantics';
 import{filmFont,textWidth,type Language}from'./language';
 import{clamp,smooth,easeOut,mix,n,esc}from'./math';
-import{vocalDelivery,voiceLevel,type VocalDelivery}from'./voice';
+import{vocalDelivery,voiceLevel,wordSustain,type VocalDelivery}from'./voice';
 import{cameraRecipes,rhythmRecipes}from'./catalog';
 import{typeWidth,typographyFor,type Typography}from'./typography';
 import{beatResponse}from'./beat';
@@ -83,7 +83,7 @@ export function phraseProjection(p:Project,s:Scene,t:number,w:number,h:number,cu
   const xx=x*Math.cos(yaw),z=-x*Math.sin(yaw),yy=y*Math.cos(pitch)-z*Math.sin(pitch),zz=y*Math.sin(pitch)+z*Math.cos(pitch),perspective=focal/Math.max(focal*.5,focal-zz);
   return[cx+(xx*Math.cos(roll)-yy*Math.sin(roll))*perspective+w*recipe.x*rotate*intensity,cy+(xx*Math.sin(roll)+yy*Math.cos(roll))*perspective+h*recipe.y*rotate*intensity];
  };
- const corners=layout.flatMap(item=>{const right=item.x+typeWidth(item.word.text,type)*item.size;return[[item.x-item.size*.1,item.y-item.size*1.04],[right+item.size*.12,item.y-item.size*1.04],[right+item.size*.12,item.y+item.size*.32],[item.x-item.size*.1,item.y+item.size*.32]].map(([x,y])=>raw(x,y));});
+ const corners=layout.flatMap(item=>{const width=typeWidth(item.word.text,type)*item.size,right=item.x+width,held=intensity*wordSustain(p.analysis,item.word,t,cue.event.delivery),pad=held*(width*.08+item.size*.1);return[[item.x-item.size*.1-pad,item.y-item.size*1.04],[right+item.size*.12+pad,item.y-item.size*1.04],[right+item.size*.12+pad,item.y+item.size*.32],[item.x-item.size*.1-pad,item.y+item.size*.32]].map(([x,y])=>raw(x,y));});
  const xs=corners.map(v=>v[0]),ys=corners.map(v=>v[1]),left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);
  // Fit the projected plane, not only its flat source rectangle. All camera
  // recipes retain a safe title area even on long lines and extreme aspect ratios.
@@ -102,9 +102,14 @@ export function renderLyricFocus(p:Project,s:Scene,t:number,w:number,h:number,cu
   const{x,y,size,word}=item,startX=cursor,startY=h*.834;
   cursor+=(textWidth(word.text)+.61)*small;
   const sizeNow=mix(small,size,travel),target=project(x,y),dx=project(x+1,y),dy=project(x,y+1),xx=mix(startX,target[0],travel),yy=mix(startY,target[1],travel),isActive=word.id===active.id;
-  const attack=clamp((t-word.start)/.11),stretch=isActive?1+Math.sin(attack*Math.PI)*.035:1;
+  const held=isActive&&(s.performance?.enabled??true)?wordSustain(p.analysis,word,t,cue.event.delivery)*(s.performance?.intensity??.7):0;
+  const attack=clamp((t-word.start)/.11),width=typeWidth(word.text,type)/type.width*sizeNow,space=typeWidth(' ',type)*sizeNow,extension=held*Math.min(.14,space/Math.max(1,width*type.width)*.85),stretch=isActive?1+Math.sin(attack*Math.PI)*.035+extension:1;
   const color=isActive?p.style.accent:p.style.foreground,alpha=t>=word.start?.98:.54;
-  out+=`<g transform="matrix(${n(mix(1,dx[0]-target[0],travel))} ${n((dx[1]-target[1])*travel)} ${n((dy[0]-target[0])*travel)} ${n(mix(1,dy[1]-target[1],travel))} ${n(xx)} ${n(yy)})"><g transform="scale(${n(type.width*stretch)} 1)"><text font-family="${type.face.family},Noto Sans CJK JP" font-kerning="none" font-weight="${type.face.weight}" font-style="${type.face.italic?'oblique':'normal'}" letter-spacing="${n(type.tracking*sizeNow)}" font-size="${n(sizeNow)}" fill="${type.outline&&!isActive?'none':color}" ${type.outline?`stroke="${color}" stroke-width="${n(sizeNow*.012)}"`:''} opacity="${alpha}">${esc(word.text)}</text>`;
+  const lettering=`font-family="${type.face.family},Noto Sans CJK JP" font-kerning="none" font-weight="${type.face.weight}" font-style="${type.face.italic?'oblique':'normal'}" letter-spacing="${n(type.tracking*sizeNow)}" font-size="${n(sizeNow)}"`;
+  out+=`<g ${held>.005?`data-held-word="${esc(word.id)}" data-hold-strength="${n(held)}"`:''} transform="matrix(${n(mix(1,dx[0]-target[0],travel))} ${n((dx[1]-target[1])*travel)} ${n((dy[0]-target[0])*travel)} ${n(mix(1,dy[1]-target[1],travel))} ${n(xx)} ${n(yy)})"><g transform="translate(${n(-width*type.width*(stretch-1)*.5)} 0) scale(${n(type.width*stretch)} 1)">`;
+  if(held>.005)for(let echo=1;echo<=3;echo++)out+=`<text ${lettering} transform="translate(${n(-held*sizeNow*.025*echo)} ${n(Math.sin(t*3-echo*.65)*held*sizeNow*.018*echo)})" fill="none" stroke="${color}" stroke-width="${n(Math.max(.6*u,sizeNow*.007))}" opacity="${n(held*(.2-echo*.04))}">${esc(word.text)}</text>`;
+  out+=`<text ${lettering} fill="${type.outline&&!isActive?'none':color}" ${type.outline?`stroke="${color}" stroke-width="${n(sizeNow*.012)}"`:''} opacity="${alpha}">${esc(word.text)}</text>`;
+  if(held>.005){const wave=Array.from({length:33},(_,i)=>`${i?'L':'M'}${n(width*i/32)} ${n(sizeNow*.21+Math.sin(i*.55-t*6)*held*sizeNow*.035)}`).join('');out+=`<path d="${wave}" fill="none" stroke="${color}" stroke-width="${n(Math.max(u,sizeNow*.008))}" opacity="${n(held*.65)}"/>`;}
   if(isActive){const width=typeWidth(word.text,type)/type.width*sizeNow;out+=`<path d="M0 ${n(sizeNow*.18)}H${n(width)}" stroke="${p.style.accent}" stroke-width="${n(Math.max(1.2*u,sizeNow*.013))}" opacity="${n(a*.6)}"/>`;if(cue.mode==='word')out+=`<rect x="${n(width+sizeNow*.12)}" y="${n(-sizeNow*.76)}" width="${n(sizeNow*.07)}" height="${n(sizeNow*.78)}" fill="${p.style.accent}" opacity="${n(a*.8)}"/>`;}
   out+='</g>';
   out+='</g>';

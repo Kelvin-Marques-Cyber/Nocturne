@@ -2,7 +2,7 @@
 // Copyright 2026 Kelvin e Silva Marques
 import React from 'react';
 import type {Project,Scene,Word,SceneEvent} from '../engine/model';
-import {cameraRecipes,typographyRecipes,gestureRecipes,textureRecipes,rhythmRecipes,catalogStats,type Performance} from '../engine/catalog';
+import {cameraRecipes,typographyRecipes,gestureRecipes,textureRecipes,rhythmRecipes,catalogStats,beatStyles,beatStyleLabels,type Performance} from '../engine/catalog';
 import {directPerformance} from '../engine/director';
 import {deliveryLabels,deliveries,vocalDelivery,type Delivery} from '../engine/voice';
 
@@ -24,7 +24,7 @@ export function PerformancePanel({project,scene,word,edit,editScene,seek}:{proje
   {options('gesture','Gesto do personagem',gestureRecipes)}
   <label className="check"><input type="checkbox" checked={perf?.followLyrics??true} onChange={e=>patch({followLyrics:e.target.checked})}/> Adaptar o gesto ao sentido da letra</label>
   {options('texture','Textura da cena',textureRecipes)}{options('rhythm','Ritmo do movimento',rhythmRecipes)}
-  <label className="field">Acento visual das batidas<select value={perf?.beatStyle??'pulse'} onChange={e=>patch({beatStyle:e.target.value as Performance['beatStyle']})}><option value="pulse">Pulso do quadro</option><option value="ripple">Ondas</option><option value="rays">Raios</option><option value="bars">Barras de frequência</option></select></label>
+  <label className="field">Acento visual das batidas<select value={perf?.beatStyle??'pulse'} onChange={e=>patch({beatStyle:e.target.value as Performance['beatStyle']})}>{beatStyles.map(style=><option key={style} value={style}>{beatStyleLabels[style]}</option>)}</select></label>
   <label className="slider"><span>Reação às batidas<b>{(perf?.beatSync??.65).toFixed(2)}</b></span><input type="range" min="0" max="1" step=".01" value={perf?.beatSync??.65} onChange={e=>patch({beatSync:Number(e.target.value)})}/></label>
   <label className="slider"><span>Intensidade da direção<b>{(perf?.intensity??.72).toFixed(2)}</b></span><input type="range" min="0" max="1" step=".01" value={perf?.intensity??.72} onChange={e=>patch({intensity:Number(e.target.value)})}/></label>
   <h3>Expressão da frase selecionada</h3><p className="selected-phrase">{line.map(w=>w.text).join(' ')||'Selecione uma palavra na letra.'}</p>

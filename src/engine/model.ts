@@ -4,7 +4,7 @@ import {lexical,languages,type Language} from './language';
 import {textureKinds,validPerformance,type Performance} from './catalog';
 import {deliveries,type Delivery} from './voice';
 export const transitions=['cut','shutter','dissolve','ink','channel','iris','whip','burn','zoom','split','mosaic','filmstrip','ripple','raster','aperture','typewriter','crosszoom'] as const;
-export const kinds = ['constellation','heart','corridor','choice','echo','hide','soul','fall','denial','orbit','rest','terminal','ocean','door','lift','television','tunnel3d','mirror','storm','clock'] as const;
+export const kinds = ['constellation','heart','corridor','choice','echo','hide','soul','fall','denial','orbit','rest','terminal','ocean','door','lift','television','tunnel3d','mirror','storm','clock','bridge','forest','city','desert','staircase','cage','eclipse','prism','guitar','piano','drums'] as const;
 export type SceneKind=typeof kinds[number];
 export const actions=['idle','walk','run','stumble','fall','kneel','rise','crawl','fear','hesitate','surprise','hold','push','drag','reach','rest','turn','brace','float','recoil'] as const;
 export type Action=typeof actions[number];

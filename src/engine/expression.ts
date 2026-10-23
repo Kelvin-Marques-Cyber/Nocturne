@@ -17,7 +17,8 @@ export function expressivePose(base:Pose,p:Project,s:Scene,t:number):{pose:Pose;
  if(protectedAction)return{pose:base};
  const motionFade=motion?Math.min(smooth((t-motion.start)/.3),smooth((motion.end-t)/.3)):1;
  const targets:Record<string,[Point,Point,number]>={
-  question:[[-59,55],[56,58],-8],refuse:[[-52,8],[58,21],-12],appeal:[[-16,24],[19,18],-10],explain:[[-53,58],[60,40],4],protect:[[16,29],[-13,43],9],listen:[[-24,82],[36,-17],-12],resolve:[[-22,82],[43,39],-3],grieve:[[-12,66],[17,68],14],welcome:[[-65,36],[66,34],-5],release:[[-52,76],[53,74],5],point:[[-20,82],[43,-43],-7],search:[[-24,80],[53,-14],-13]
+  question:[[-59,55],[56,58],-8],refuse:[[-52,8],[58,21],-12],appeal:[[-16,24],[19,18],-10],explain:[[-53,58],[60,40],4],protect:[[16,29],[-13,43],9],listen:[[-24,82],[36,-17],-12],resolve:[[-22,82],[43,39],-3],grieve:[[-12,66],[17,68],14],welcome:[[-65,36],[66,34],-5],release:[[-52,76],[53,74],5],point:[[-20,82],[43,-43],-7],search:[[-24,80],[53,-14],-13],
+  offer:[[-37,61],[48,60],5],remember:[[-26,72],[24,-12],-9],shield:[[-29,5],[33,17],-11],doubt:[[-38,29],[36,-4],-15],promise:[[-19,34],[39,11],-4],reachout:[[-18,78],[68,24],8],carry:[[-38,66],[40,67],12],farewell:[[-20,80],[48,-28],-6]
  };
  const layers=[...new Set(words.map(w=>w.line))].flatMap(id=>{
   const line=words.filter(w=>w.line===id),start=line[0].start,end=line.at(-1)!.end;

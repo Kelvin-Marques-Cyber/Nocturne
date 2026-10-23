@@ -11,7 +11,7 @@ const gestureCache=new Map<string,GestureKind>();
 export function semanticGesture(text:string,fallback:GestureKind='explain'):GestureKind {
  const key=fallback+'|'+text,cached=gestureCache.get(key);if(cached)return cached;
  const concept=analyzeMeaning(text).hits[0]?.concept;
- const result=({choice:'question',refusal:'refuse',heart:'protect',soul:'appeal','known-soul':'protect',voice:'listen',escape:'search',rest:'release',fall:'resolve',stars:'point',scale:'search',mirror:'question',storm:'protect',ocean:'grieve',threshold:'appeal',time:'listen',sight:'welcome',emotion:'explain'} as Record<string,GestureKind>)[concept??'']??fallback;
+ const result=({choice:'question',refusal:'refuse',heart:'protect',soul:'appeal','known-soul':'protect',voice:'listen',escape:'search',rest:'release',fall:'resolve',stars:'point',scale:'search',mirror:'question',storm:'protect',ocean:'grieve',threshold:'appeal',time:'listen',sight:'welcome',emotion:'explain',bridge:'reachout',forest:'search',city:'remember',desert:'carry',staircase:'promise',cage:'shield',eclipse:'doubt',prism:'offer',farewell:'farewell'} as Record<string,GestureKind>)[concept??'']??fallback;
  if(gestureCache.size>2048)gestureCache.clear();gestureCache.set(key,result);return result;
 }
 export function directPerformance(project:Project,variation=0,replan=true):Project {
@@ -27,7 +27,7 @@ export function directPerformance(project:Project,variation=0,replan=true):Proje
   const camera=pick(cameraPool,13,previousCamera),typePool=shout?typographyRecipes.filter(t=>t.face.weight===700&&!t.outline):typographyRecipes;
   const type=pick(typePool,29,previousType),gesturePool=gestureRecipes.filter(g=>g.kind===semanticGesture(text));
   const gesture=pick(gentle?gesturePool.slice(0,2):shout?gesturePool.slice(2):gesturePool,47);
-  const texturePool=textureRecipes.filter(t=>gentle?['clean','vignette-0','bloom-0','monochrome-0'].includes(t.id):!['invert','hazard','hud','letterbox'].includes(t.type));
+  const texturePool=textureRecipes.filter(t=>gentle?['clean','vignette-0','bloom-0','monochrome-0','sepia-0','lightleak-0','dust-0'].includes(t.id):!['invert','hazard','hud','letterbox','thermal','solarize','ink','emboss'].includes(t.type));
   const texture=pick(texturePool,83,previousTexture),rhythm=rhythmRecipes.find(r=>r.id===(shout?'accent':delivery.kind==='rising'?'swelling':delivery.kind==='sustained'?'suspended':gentle?'breath':index%2?'legato':'accent'))!;
   previousCamera=camera.id;previousType=type.id;previousTexture=texture.id;
   return{...scene,performance:{enabled:true,camera:camera.id,typography:type.id,gesture:gesture.id,texture:texture.id,rhythm:rhythm.id,intensity:gentle?.45:shout?1:.72,variation,beatSync:gentle?.3:.7,beatStyle:beatStyles[index%beatStyles.length]}};

@@ -252,3 +252,11 @@ Abra o endereço HTTPS publicado e use Instalar app quando o navegador oferecer 
 A exportação no PWA precisa de um navegador com encoder WebCodecs H.264 disponível. O áudio AAC tem fallback WASM local. A aplicação verifica o suporte e informa quando é necessário usar Chrome/Edge compatível ou o renderizador FFmpeg. Uma prévia HTTP em host não confiável não oferece instalação nem WebCodecs; GitHub Pages usa HTTPS. A duração segue os samples de áudio e os timestamps de cada frame, sem captura da tela em tempo real.
 
 O planejamento aceita qualquer letra, mas o reconhecimento semântico cobre os conceitos cadastrados nos dez idiomas. Expressões desconhecidas recebem direção alternativa editável. Sem uma transcrição ASR importada, os tempos no PWA continuam estimados, sinalizados e ajustáveis.
+
+### Palco e edição no celular
+
+O catálogo agora oferece 31 cenários, incluindo guitarra, piano e bateria com mãos articuladas e resposta à energia das batidas. Ponte, floresta, cidade, deserto, escadaria, gaiola, eclipse e prisma ampliam as metáforas da letra. Há 26 filtros em camadas, 13 faces tipográficas offline, 52 tratamentos de fonte, 80 gestos expressivos, 48 movimentos de câmera e oito acentos visuais de batida. São receitas combináveis; não clipes prontos de todas as músicas. A escolha de instrumentos usa palavras explícitas da letra ou o seletor da cena, sem prometer reconhecimento de instrumentos no áudio.
+
+Notas prolongadas recebem extensão, contornos em rastro e um traço oscilante durante o intervalo da palavra. A grafia comum também funciona com duração e presença vocal; letras repetidas, como uma vogal estendida, são uma indicação adicional. Os tempos estimados limitam a precisão dessa reação e podem ser corrigidos no editor.
+
+Colar ou editar a letra atualiza palavras, cenas e direção após uma breve pausa. Títulos antes da primeira seção e indicações entre colchetes não são tratados como canto. A sincronização sem transcrição continua estimada pelo áudio. A cena e as palavras acompanham a navegação na faixa. No celular, Prévia, Cenas, Letra, Áudio e Ajustes têm áreas próprias, com campos legíveis, controles para toque e rolagem disponível com o teclado aberto.
