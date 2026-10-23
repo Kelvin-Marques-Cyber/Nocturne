@@ -11,7 +11,7 @@ export function retainedTranscript(words:Word[]):Transcript|undefined {
  return{method:'retained-word-anchors',segments:[{start:anchored[0].start,end:anchored.at(-1)!.end,text:anchored.map(w=>w.text).join(' '),words:anchored.map(w=>({text:w.text,start:w.start,end:w.end,confidence:w.confidence}))}]};
 }
 function similarity(a:string,b:string){
- a=normalize(a);b=normalize(b);if(a===b)return 1;if(Math.min(a.length,b.length)<4)return 0;
+ a=normalize(a).replace(/([aeiou])\1{2,}/g,'$1');b=normalize(b).replace(/([aeiou])\1{2,}/g,'$1');if(a===b)return 1;if(Math.min(a.length,b.length)<4)return 0;
  let row=Array.from({length:b.length+1},(_,i)=>i);
  for(let i=1;i<=a.length;i++){const next=[i];for(let j=1;j<=b.length;j++)next[j]=Math.min(next[j-1]+1,row[j]+1,row[j-1]+(a[i-1]===b[j-1]?0:1));row=next;}
  return 1-row[b.length]/Math.max(a.length,b.length);
@@ -56,7 +56,7 @@ function reusePriorTiming(tokens:ReturnType<typeof tokenizeLyrics>,prior:Word[],
  return words;
 }
 
-export function alignLyrics(lyrics:string,analysis:Analysis,transcript?:Transcript,language:Language='auto',priorWords:Word[]=[],titleHint?:string){
+export function alignLyrics(lyrics:string,analysis:Pick<Analysis,'duration'|'onsets'|'vocalRegions'>,transcript?:Transcript,language:Language='auto',priorWords:Word[]=[],titleHint?:string){
  const tokens=tokenizeLyrics(lyrics,language,titleHint);
 
  if(!tokens.length)return {words:[]as Word[],coverage:0,method:'no-lyrics',notes:['Sem letra. Cenas instrumentais.']};

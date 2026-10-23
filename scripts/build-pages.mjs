@@ -6,6 +6,7 @@ import{createHash}from'node:crypto';
 import{join}from'node:path';
 const base=process.env.NOCTURNE_BASE??'/Nocturne/';
 if(!/^\/(?:[a-zA-Z0-9_-]+\/)*$/.test(base))throw Error('NOCTURNE_BASE deve ser / ou /nome/.');
+await rm('dist',{recursive:true,force:true});
 for(const args of [['node_modules/typescript/bin/tsc','--noEmit'],['node_modules/vite/bin/vite.js','build','--base',base]]){
  const r=spawnSync(process.execPath,args,{stdio:'inherit',env:{...process.env,VITE_STATIC:'true'}});if(r.status!==0)process.exit(r.status??1);
 }

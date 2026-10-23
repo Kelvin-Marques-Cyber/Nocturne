@@ -33,7 +33,8 @@ export function tokenizeLine(text:string,language:Language='auto'):string[]{
 export function lyricContent(text:string,titleHint?:string){
  const lines=text.split('\n'),section=(line:string)=>/^\s*\[[^\]\n]+\]\s*$/.test(line),firstSection=lines.findIndex(section),prefix=lines.slice(0,Math.max(0,firstSection)).map((s,i)=>({s:s.trim(),i})).filter(x=>x.s);
  const first=lines.map((s,i)=>({s:s.trim(),i})).find(x=>x.s);
- const knownTitle=first&&titleHint&&lexical(first.s)===lexical(titleHint)&&!lines[first.i+1]?.trim()?first:undefined;
+ const titleName=(value:string)=>lexical(value).replace(/\([^)]*\)|\[[^\]]*\]/g,' ').replace(/\bv\d+(?:\.\d+)*\b/g,' ').replace(/\s+/g,' ').trim();
+ const knownTitle=first&&titleHint&&(lexical(first.s)===lexical(titleHint)||lexical(first.s)===titleName(titleHint))&&!lines[first.i+1]?.trim()?first:undefined;
  const title=knownTitle??(prefix.length===1&&/\p{L}/u.test(prefix[0].s)&&prefix[0].s===prefix[0].s.toUpperCase()?prefix[0]:undefined);
  return{text:lines.map((line,i)=>section(line)||i===title?.i?'':line).join('\n'),title:title?.s};
 }

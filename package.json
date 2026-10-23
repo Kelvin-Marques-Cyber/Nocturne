@@ -23,7 +23,9 @@
   },
   "dependencies": {
     "@mediabunny/aac-encoder": "^1.62.1",
+    "franc-min": "6.2.0",
     "mediabunny": "^1.62.1",
+    "onnxruntime-web": "1.22.0",
     "opentype.js": "^2.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",

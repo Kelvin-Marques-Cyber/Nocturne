@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 Kelvin e Silva Marques
 """Optional ASR. Model is downloaded once, or use --model /local/model for offline work."""
+import os
+os.environ['ORT_DISABLE_TELEMETRY']='1'
 import argparse,json,subprocess,numpy as np
 from faster_whisper import WhisperModel
 p=argparse.ArgumentParser();p.add_argument('audio');p.add_argument('--out',required=True);p.add_argument('--model',default='small');p.add_argument('--language',default='auto');a=p.parse_args()

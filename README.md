@@ -47,7 +47,7 @@ python -m pip install -r requirements.txt
 npm run dev
 ```
 
-Abra `http://localhost:4173`. Em **Fonte**, importe sua música. Em **Letra**, cole o texto e gere o storyboard. Se não importar uma transcrição ASR, os tempos são estimados e precisam ser corrigidos no sequenciador.
+Abra `http://localhost:4173`. Em **Fonte**, importe sua música. Em **Letra**, cole o texto e gere o storyboard. A sincronização pela voz inicia automaticamente na importação. Para refazer um projeto já aberto, use Letra → Sincronizar letra pela voz; trechos sem âncoras confiáveis continuam marcados para revisão.
 
 O repositório contém a letra, o storyboard e a análise de “Deus nos vê”, usados na primeira entrega. A gravação pessoal e o vídeo de referência não são redistribuídos no código. Para reproduzir o storyboard original com a música original, copie seu MP3 para o caminho esperado:
 
@@ -251,7 +251,7 @@ Abra o endereço HTTPS publicado e use Instalar app quando o navegador oferecer 
 
 A exportação no PWA precisa de um navegador com encoder WebCodecs H.264 disponível. O áudio AAC tem fallback WASM local. A aplicação verifica o suporte e informa quando é necessário usar Chrome/Edge compatível ou o renderizador FFmpeg. Uma prévia HTTP em host não confiável não oferece instalação nem WebCodecs; GitHub Pages usa HTTPS. A duração segue os samples de áudio e os timestamps de cada frame, sem captura da tela em tempo real.
 
-O planejamento aceita qualquer letra, mas o reconhecimento semântico cobre os conceitos cadastrados nos dez idiomas. Expressões desconhecidas recebem direção alternativa editável. Sem uma transcrição ASR importada, os tempos no PWA continuam estimados, sinalizados e ajustáveis.
+O planejamento aceita qualquer letra, mas o reconhecimento semântico cobre os conceitos cadastrados nos dez idiomas. Expressões desconhecidas recebem direção alternativa editável. O PWA tenta obter âncoras de voz automaticamente. Palavras sem evidência suficiente continuam interpoladas, sinalizadas e ajustáveis.
 
 ### Palco e edição no celular
 
@@ -273,6 +273,10 @@ O boneco mantém gestos mais contidos, ombros melhor separados e cotovelos levem
 
 ## Sincronização pela voz no PWA
 
-A importação de música inicia o reconhecimento de palavras em um worker. Para um projeto já aberto, use **Letra → Sincronizar letra pela voz**. No primeiro uso é necessário acesso à internet para baixar o runtime Transformers.js 3.8.1 e o modelo multilíngue Whisper Base quantizado; o áudio é processado no aparelho. O botão permite cancelar. Os tempos reconhecidos e ajustes manuais do projeto são reaproveitados ao regerar; palavras não reconhecidas continuam sinalizadas para revisão. Voz cantada, coros, rap e mistura de idiomas podem exigir ajustes. Um deslocamento global só resolve atraso constante.
+A importação da música inicia a sincronização em um worker, inclusive em projetos reabertos que ainda não têm âncoras. Para repetir, use **Letra → Sincronizar letra pela voz**. O andamento e os erros aparecem junto ao botão; a cobertura de âncoras é uma medida diferente do progresso e não representa porcentagem de precisão.
 
-O título, quando repetido em um bloco inicial igual ao título do projeto, é tratado como metadado e não como canto. Os tempos de áudio são usados igualmente na prévia e no MP4, independentemente do FPS escolhido.
+Para letras com escrita latina, o modo **Acústico + voz** alinha os caracteres fornecidos aos sons com CTC/Viterbi e confere regiões incertas com Whisper Small. Âncoras acústicas fracas ou incompatíveis não substituem palavras reconhecidas. A introdução instrumental e as pausas são mantidas; palavras com vogais escritas de forma prolongada, como `GOOOOO`, podem aproveitar a âncora de `Go` sem mudar a letra. O primeiro uso baixa o modelo acústico de aproximadamente 317 MB e, se necessário, Whisper Small. O áudio fica no aparelho; os modelos são armazenados em cache quando o navegador permite. É possível cancelar.
+
+**Licença dos pesos acústicos:** MMS_FA / a conversão ONNX utilizada são CC-BY-NC-4.0, para uso não comercial. O seletor também oferece **Transcrição de voz multilíngue**, que usa Whisper sem MMS. Outros alfabetos usam essa transcrição. As licenças dos modelos não alteram a licença Apache do código original; veja `THIRD_PARTY_NOTICES.md`.
+
+O idioma automático é previsto pelo modelo a cada janela de áudio, orientado pelos idiomas encontrados na letra. Ele não depende do padrão inglês do Transformers.js 3.8.1. Tempos reconhecidos e ajustes manuais são preservados ao regerar. Sobreposição de vozes, palavras ausentes na gravação, rap e voz com muito efeito ainda exigem conferência; não há garantia de alinhamento perfeito para toda música. Deslocamento global corrige apenas atraso constante.
