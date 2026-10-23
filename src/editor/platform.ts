@@ -37,7 +37,7 @@ async function analyzeAudioInBrowser(file:File):Promise<Analysis>{
  });
 }
 export async function importAudioFile(file:File):Promise<{audio:string;title:string;analysis:Analysis;analysisFallback?:boolean}>{
- if(!/\\.(mp3|wav|flac)$/i.test(file.name)||file.size>256*1024*1024)throw Error('Importe MP3, WAV ou FLAC de até 256 MB.');
+ if(!/\.(mp3|wav|flac)$/i.test(file.name)||file.size>256*1024*1024)throw Error('Importe MP3, WAV ou FLAC de até 256 MB.');
  if(!browserMode){
   const response=await fetch('/api/audio?name='+encodeURIComponent(file.name),{method:'POST',body:file}),data=await response.json();
   if(!response.ok)throw Error(data.error??'Falha ao enviar o áudio.');
@@ -49,5 +49,5 @@ export async function importAudioFile(file:File):Promise<{audio:string;title:str
  const analysis=await analyzeAudioInBrowser(file);
  const audio='media/browser-'+[...crypto.getRandomValues(new Uint8Array(12))].map(n=>n.toString(16).padStart(2,'0')).join('')+'.'+file.name.split('.').at(-1)!.toLowerCase();
  await persist('audio:'+audio,file);
- return{audio,title:file.name.replace(/\\.[^.]+$/,''),analysis};
+ return{audio,title:file.name.replace(/\.[^.]+$/,''),analysis};
 }
