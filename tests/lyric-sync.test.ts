@@ -28,3 +28,11 @@ test('positive video sync offset delays rendered lyrics without moving the audio
  assert.match(renderFrame(shifted,Math.round((first.start+1.2)*project.fps)),/>Estrelas,<\/text>/);
  assert.throws(()=>validateProject({...project,visualSyncOffsetSeconds:5.1}),/Deslocamento/);
 });
+test('scenic reel worlds display the sung lyric rather than only a thematic label',()=>{
+ const p:Project=structuredClone(project),first=p.words[0];p.direction='reel';p.style.captions=true;
+ for(const scene of p.scenes){scene.kind='cross';scene.accent='SÍMBOLO';scene.events=[];scene.camera.lyricFocus=0;}
+ const svg=renderFrame(p,Math.round((first.start+.1)*p.fps));
+ assert.match(svg,/data-sung-caption=/);assert.match(svg,/>Estrelas,<\/text>/);
+ assert.doesNotMatch(svg,/>constelações<\/text>/);
+ assert.doesNotMatch(renderFrame(p,Math.round((first.start-.2)*p.fps)),/data-sung-caption=/);
+});

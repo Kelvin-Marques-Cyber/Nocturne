@@ -2,7 +2,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {detectAudioLanguage,lyricLanguages} from '../src/browser/speech-language';
-import {transcribeChunks,type SpeechProgress} from '../src/browser/speech-chunks';
+import {recognitionWindows,transcribeChunks,type SpeechProgress} from '../src/browser/speech-chunks';
 test('automatic language detection predicts a language token instead of using English by default',async()=>{
  let released=false;
  const language=await detectAudioLanguage(new Float32Array(16000),{
@@ -26,11 +26,16 @@ test('chunk progress advances and timestamps retain their position in the origin
  const progress:SpeechProgress[]=[];let calls=0;
  const transcript=await transcribeChunks(new Float32Array(41*16000),async(_samples,options)=>{
   assert.equal(options.language,'pt');assert.equal(options.return_timestamps,'word');assert.equal(options.chunk_length_s,0);
-  const index=calls++,start=index?4.5:7.5;
+  const index=calls++,start=index?2.5:7.5;
   return{text:'palavra',chunks:[{text:'palavra'+index,timestamp:[start,start+.3]}]};
  },'auto',value=>progress.push(value),async()=> 'pt');
- assert.equal(calls,3);assert.ok(progress.some(p=>p.progress>0&&p.progress<100));assert.equal(progress.at(-1)!.progress,100);
- assert.deepEqual(transcript.segments[0].words!.map(w=>w.start),[7.5,20.5,40.5]);
+ assert.equal(calls,4);assert.ok(progress.some(p=>p.progress>0&&p.progress<100));assert.equal(progress.at(-1)!.progress,100);
+ assert.deepEqual(transcript.segments[0].words!.map(w=>w.start),[7.5,12.5,24.5,36.5]);
+});
+test('speech workers receive bounded windows with context rather than the whole recording',()=>{
+ const windows=recognitionWindows(379,134,173);
+ assert.deepEqual(windows.map(w=>[w.coreStart,w.coreEnd]),[[134,154],[154,173]]);
+ assert.ok(windows.every(w=>w.end-w.start<=24));
 });
 test('an unavailable language detector fails explicitly instead of producing an English transcript',async()=>{
  await assert.rejects(transcribeChunks(new Float32Array(16000),async()=>{throw Error('must not decode');},'auto',()=>{}),/detectar o idioma/);

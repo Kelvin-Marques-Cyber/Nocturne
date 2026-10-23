@@ -9,12 +9,13 @@ import{audioBlob,decodeAudio}from'../editor/platform';
 import{loadFilmFonts,outlineText}from'./fonts';
 import{FramePool}from'./frame-pool';
 export interface BrowserRenderOptions{from?:number;duration?:number;width?:number;height?:number;fps?:number;signal?:AbortSignal;onProgress?:(percent:number)=>void;onStats?:(stats:{fps:number;remaining:number;workers:number})=>void;}
+let fallbackAac:Promise<boolean>|undefined;
 export async function renderBrowserVideo(project:Project,options:BrowserRenderOptions={}):Promise<Blob>{
  validateProject(project);
  const dim=dimensions(project.format),w=options.width??dim.width,h=options.height??dim.height,fps=options.fps??project.fps,from=options.from??0,duration=Math.min(options.duration??project.duration,project.duration-from);
  if(!Number.isFinite(from)||from<0||duration<=0||!Number.isInteger(fps)||fps<=0||fps>60||w%2||h%2||w<=0||h<=0)throw Error('Trecho ou dimensões inválidos.');
  if(!await canEncodeVideo('avc',{width:w,height:h,frameRate:fps}))throw Error('Este navegador não oferece codificação H.264. Abra no Chrome/Edge com WebCodecs ou use o renderizador FFmpeg local.');
- if(!await canEncodeAudio('aac'))registerAacEncoder();
+ const wasmAac=await(fallbackAac??=(async()=>{const needed=!await canEncodeAudio('aac');if(needed)registerAacEncoder();return needed;})());
  const buffer=await decodeAudio(await audioBlob(project.audio),48000);
  if(buffer.duration+.05<from+duration)throw Error('A gravação importada termina antes do trecho solicitado. Importe o áudio correspondente ao storyboard.');
  const start=Math.round(from*buffer.sampleRate),length=Math.min(Math.round(duration*buffer.sampleRate),buffer.length-start);
@@ -22,7 +23,9 @@ export async function renderBrowserVideo(project:Project,options:BrowserRenderOp
  const clip=new AudioBuffer({length,numberOfChannels:buffer.numberOfChannels,sampleRate:buffer.sampleRate});for(let c=0;c<clip.numberOfChannels;c++)clip.copyToChannel(buffer.getChannelData(c).subarray(start,start+length),c);
  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const context=canvas.getContext('2d',{alpha:false});if(!context)throw Error('Canvas 2D indisponível.');
  const hardware=await canEncodeVideo('avc',{width:w,height:h,frameRate:fps,hardwareAcceleration:'prefer-hardware'});
- const target=new BufferTarget(),output=new Output({format:new Mp4OutputFormat({fastStart:'in-memory'}),target}),video=new CanvasSource(canvas,{codec:'avc',quality:new Quality({bitrate:w*h*fps*.13}),keyFrameInterval:2,hardwareAcceleration:hardware?'prefer-hardware':'no-preference',latencyMode:'quality'}),audio=new AudioBufferSource({codec:'aac',quality:new Quality({bitrate:192000})});
+ // The WASM AAC adapter emits its 1024 priming samples at the input timestamp.
+ // Backdate that source so the MP4 edit list skips priming instead of delaying vocals.
+ const target=new BufferTarget(),output=new Output({format:new Mp4OutputFormat({fastStart:'in-memory'}),target}),video=new CanvasSource(canvas,{codec:'avc',quality:new Quality({bitrate:w*h*fps*.13}),keyFrameInterval:2,hardwareAcceleration:hardware?'prefer-hardware':'no-preference',latencyMode:'quality'}),audio=new AudioBufferSource({codec:'aac',quality:new Quality({bitrate:192000})},{startTimestamp:wasmAac?-1024/clip.sampleRate:0});
  output.addVideoTrack(video,{frameRate:fps});output.addAudioTrack(audio);await output.start();
   const cache=new Map<string,{d:string;width:number}>(),total=Math.ceil(duration*fps);
  const memory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??4;

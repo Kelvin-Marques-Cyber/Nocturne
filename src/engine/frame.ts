@@ -263,12 +263,12 @@ function captions(c:Ctx){
  const active=c.words.find(w=>c.t>=w.start&&c.t<w.end)??[...c.words].reverse().find(w=>c.t>=w.end&&c.t-w.end<.65);
  if(!active)return'';
  const ws=c.words.filter(w=>w.line===active.line),maxWidth=c.w*.8;
- const size=Math.min(34*c.u,maxWidth/Math.max(1,ws.reduce((n,w)=>n+textWidth(w.text)/.61,0)+ws.length)*1.6);
+ const size=Math.min((c.p.direction==='reel'?52:34)*c.u,maxWidth/Math.max(1,ws.reduce((n,w)=>n+textWidth(w.text)/.61,0)+ws.length)*1.6);
  const total=ws.reduce((a,w)=>a+(textWidth(w.text)+.61)*size,0);let x=(c.w-total)/2;
- return ws.map(w=>{
+ return `<g data-sung-caption="${esc(active.id)}">`+ws.map(w=>{
   const a=clamp((c.t-w.start+.16)/.26),y=c.h*.834+(1-easeOut(a))*12*c.u,color=c.t>=w.start&&c.t<w.end?c.accent:c.fg;
   const result=c.t>=w.start?txt(w.text,x,y,size,color,'opacity=".95"'):'';x+=(textWidth(w.text)+.61)*size;return result;
- }).join('');
+ }).join('')+'</g>';
 }
 function grain(c:Ctx,frame:number){
  const amount=c.p.style.grain;if(!amount)return'';
@@ -336,5 +336,9 @@ export function renderFrame(p:Project,frame:number,options?:{width?:number;heigh
  const a=evaluateLyricFocus(p,s,t)?.amount??0;
  out+=`<rect width="${w}" height="${h}" fill="url(#scan)" opacity="${n(p.style.vhs*.4*(1-a*.8))}"/>`+grain(c,frame)+`<rect width="${w}" height="${h}" fill="url(#vignette)" opacity="${n(1-a*.8)}"/>`;
  if(t<1||p.duration-t<1.4)out+=`<rect width="${w}" height="${h}" fill="${p.style.background}" opacity="${n(t<1?1-smooth(t):1-smooth((p.duration-t)/1.4))}"/>`;
- return applyEffects(out+'</svg>',p.style.filters??[],{width:w,height:h,frame,seed:p.seed,energy:c.energy,beat:c.beat,focus:a});
+ const filtered=applyEffects(out+'</svg>',p.style.filters??[],{width:w,height:h,frame,seed:p.seed,energy:c.energy,beat:c.beat,focus:a});
+ // These scenic worlds use thematic labels rather than the sung lyric. Keep
+ // the actual words legible above their filters, including during transitions.
+ if(p.direction==='reel'&&['ocean','cross','home','table','hands','abyss','valley'].includes(s.kind)&&a<.9)return filtered.slice(0,-6)+captions({...c,words:p.words})+'</svg>';
+ return filtered;
 }
