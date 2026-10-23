@@ -30,8 +30,8 @@ for(const [segmentIndex,segment] of transcript.segments.entries()){
 }
 const lyrics=Array.from({length:row},(_,i)=>rows[i]?.join(' ')??'').join('\n');
 analysis.vocalRegions=transcript.segments.map(s=>({start:s.start,end:s.end,confidence:.8}));
-const p=makeProject({title:v.title!,artist:'Kelvin',audio,lyrics,language:'auto',analysis,words,alignment:{method:transcript.method??'ASR da gravação',coverage:words.length?words.filter(w=>w.confidence>=.6).length/words.length:0,reviewRequired:true,notes:['Versão cantada selecionada pelo autor; a letra de referência contém versos diferentes.','Texto e tempos reconhecidos automaticamente; confiança por palavra preservada.',`${corrected} correções editoriais de grafia, mantidas com confiança limitada.`]}});
-p.character={...p.character,design:'ink',thickness:1.65,head:.9,heart:false};p.style.grain=.18;p.style.glitch=.18;p.style.chromatic=.18;p.style.vhs=.15;
+const p=makeProject({title:v.title!,artist:'Kelvin',audio,lyrics,language:'auto',analysis,words,alignment:{method:transcript.method??'ASR da gravação',coverage:words.length?words.filter(w=>w.confidence>=.6).length/words.length:0,reviewRequired:true,notes:[v.reference?'Versão cantada selecionada pelo autor; a letra de referência contém versos diferentes.':'Letra extraída da gravação enviada.','Texto e tempos reconhecidos automaticamente; confiança por palavra preservada.',`${corrected} correções editoriais de grafia, mantidas com confiança limitada.`]}});
+p.character={...p.character,design:'line',thickness:2.2,head:1,heart:false};p.style.grain=.18;p.style.glitch=.18;p.style.chromatic=.18;p.style.vhs=.15;
 // Preserve quiet passages, then tighten shots when the delivery accelerates.
 for(const scene of p.scenes){
  const ws=words.filter(w=>scene.wordIds.includes(w.id)),rate=ws.length/(scene.end-scene.start);

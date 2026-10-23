@@ -5,7 +5,8 @@ import {readFile,writeFile,mkdir,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import {join,resolve,extname,basename} from 'node:path';
 import {spawn} from 'node:child_process';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
+import {transcriptLyrics} from '../src/engine/transcript-lyrics';
 import {validateProject,type Project} from '../src/engine/model';
 import {alignLyrics,type Transcript} from '../src/engine/alignment';
 import {makeProject,createStoryboard} from '../src/engine/storyboard';
@@ -32,20 +33,24 @@ const server=createServer(async(req,res)=>{
   if(pathname==='/api/demo'&&req.method==='GET'){json(res,JSON.parse(await readFile('projects/deus-nos-ve.json','utf8')));return;}
   if(pathname==='/api/audio'&&req.method==='POST'){
    const name=url.searchParams.get('name')??'',ext=extname(name).toLowerCase();if(!['.mp3','.wav','.flac'].includes(ext))throw Error('Importe MP3, WAV ou FLAC.');
-   const id=randomUUID().slice(0,8),audio=`media/import-${id}${ext}`,path=join('public',audio),analysisPath=`projects/import-${id}-analysis.json`;
-   await writeFile(path,await body(req,256*1024*1024));
+   const bytes=await body(req,256*1024*1024),id=createHash('sha256').update(bytes).digest('hex'),audio=`media/import-${id}${ext}`,path=join('public',audio),analysisPath=`projects/import-${id}-analysis.json`;
+   await writeFile(path,bytes);
    // Preserve uploads when Python, NumPy, SciPy or FFmpeg is unavailable.
    // The editor can analyze the same local File with its browser worker.
    let analysis:unknown=null;
-   try{await runPython(['scripts/analyze.py',path,'--out',analysisPath]);analysis=JSON.parse(await readFile(analysisPath,'utf8'));}
+   try{
+    try{analysis=JSON.parse(await readFile(analysisPath,'utf8'));}
+    catch{await runPython(['scripts/analyze.py',path,'--out',analysisPath]);analysis=JSON.parse(await readFile(analysisPath,'utf8'));}
+   }
    catch(error){console.warn('Análise Python indisponível; utilizando fallback no navegador:',error);}
    json(res,{audio,title:basename(name,ext),analysis});return;
   }
   if(pathname==='/api/storyboard'&&req.method==='POST'){
-   const {project,lyrics,transcript}=await parse(req)as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
-   if(typeof lyrics!=='string'||lyrics.length>100000)throw Error('Letra inválida.');
+   const {project,lyrics:inputLyrics,transcript}=await parse(req)as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
+   if(typeof inputLyrics!=='string'||inputLyrics.length>100000)throw Error('Letra inválida.');
    if(transcript&&(!Array.isArray(transcript.segments)||transcript.segments.some(s=>!Array.isArray(s.words))))throw Error('Transcrição deve conter segments[].words[].');
 
+   const lyrics=inputLyrics.trim()||!transcript?inputLyrics:transcriptLyrics(transcript);
    const a=alignLyrics(lyrics,project.analysis,transcript,project.language,project.words,project.title),next={...project,lyrics,words:a.words,alignment:{method:a.method,coverage:a.coverage,notes:a.notes,reviewRequired:true}};
    next.scenes=createStoryboard(lyrics,a.words,project.analysis,project.language,project.title);next.scenes=directPerformance(next,0,false).scenes;validateProject(next);await ensureProjectFonts(next);json(res,next);return;
 

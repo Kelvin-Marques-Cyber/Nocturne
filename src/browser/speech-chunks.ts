@@ -11,13 +11,16 @@ export function recognitionWindows(duration:number,start=0,end=duration){
 }
 // Own the windows: Transformers.js v3 no longer calls chunk_callback for Whisper.
 // Context protects words at a cut; only the middle of each window is retained.
-export async function transcribeChunks(samples:Float32Array,recognizer:Recognizer,language:string,progress:(value:SpeechProgress)=>void,detectLanguage?:(samples:Float32Array)=>Promise<string>):Promise<Transcript>{
- const rate=16000,duration=samples.length/rate,step=12,context=2,total=Math.ceil(duration/step);
+export async function transcribeChunks(samples:Float32Array,recognizer:Recognizer,language:string,progress:(value:SpeechProgress)=>void,detectLanguage?:(samples:Float32Array,from?:number)=>Promise<string>,options:{windowSeconds?:number;regions?:{start:number;end:number}[];partial?:(text:string)=>void}={}):Promise<Transcript>{
+ const rate=16000,duration=samples.length/rate,step=options.windowSeconds??12,context=2,total=Math.ceil(duration/step);
  const words:NonNullable<Transcript['segments'][number]['words']>=[];
  for(let chunk=0;chunk<total;chunk++){
   const from=chunk*step,to=Math.min(duration,from+step),clipStart=Math.max(0,from-context),clipEnd=Math.min(duration,to+context);
+  if(options.regions&&!options.regions.some(r=>r.start<to&&r.end>from))continue;
+  const center=samples.subarray(Math.round(from*rate),Math.round(to*rate));let energy=0;for(let i=0;i<center.length;i+=16)energy+=center[i]*center[i];
+  if(Math.sqrt(energy/Math.max(1,Math.ceil(center.length/16)))<.0005){progress({progress:to/duration*100,chunk:chunk+1,total,completed:to,duration});continue;}
   progress({progress:from/duration*100,chunk:chunk+1,total,completed:from,duration});
-  const spoken=language==='auto'?await detectLanguage?.(samples.subarray(Math.round(from*rate),Math.round(to*rate))):language;
+  const spoken=language==='auto'?await detectLanguage?.(center,from):language;
   if(!spoken)throw Error('Não foi possível detectar o idioma da voz. Selecione o idioma da letra e tente novamente.');
   progress({progress:from/duration*100,chunk:chunk+1,total,completed:from,duration,language:spoken});
   const result=await recognizer(samples.subarray(Math.round(clipStart*rate),Math.round(clipEnd*rate)),{return_timestamps:'word',chunk_length_s:0,task:'transcribe',language:spoken,max_new_tokens:Math.min(448,Math.max(48,Math.ceil((clipEnd-clipStart)*16+24)))});
@@ -31,6 +34,7 @@ export async function transcribeChunks(samples:Float32Array,recognizer:Recognize
    words.push({text:part.text.trim(),start,end,confidence:.7});
   }
   progress({progress:to/duration*100,chunk:chunk+1,total,completed:to,duration});
+  options.partial?.(words.slice(-10).map(w=>w.text).join(' '));
  }
  if(!words.length)throw Error('Não foi possível reconhecer palavras com tempos nesta gravação.');
  return{method:'whisper-small-browser-word-timestamps-v2',language,segments:[{start:words[0].start,end:words.at(-1)!.end,text:words.map(w=>w.text).join(' '),words}]};

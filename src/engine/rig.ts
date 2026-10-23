@@ -2,6 +2,7 @@
 // Copyright 2026 Kelvin e Silva Marques
 import {clamp,mix,smooth,ik,n,pt,esc} from './math';
 import type {Action,Point,Character,Motion} from './model';
+import {renderCharacterModel} from './character-models';
 export interface Pose {hip:Point;neck:Point;head:Point;leftHand:Point;rightHand:Point;leftFoot:Point;rightFoot:Point;tilt:number;squash:number;rotation:number;}
 export const anatomy={upperArm:44,forearm:45,thigh:61,shin:61,headX:19,headY:23};
 const tau=Math.PI*2;
@@ -98,6 +99,7 @@ function limb(root:Point,joint:Point,end:Point){
  return`M${pt(root)} L${pt(a)} Q${pt(joint)} ${pt(b)} L${pt(end)}`;
 }
 export function characterSVG(p:Pose,c:Character,accent:string,heartPulse:number,ghost=false){
+ if(!c.design||['line','silhouette','mannequin'].includes(c.design))return renderCharacterModel(p,c,accent,heartPulse,ghost,solveRig(p));
  const rig=solveRig(p),s=c.thickness,opacity=ghost?.14:1;
  const path=(d:string,alpha=1)=>`<path d="${d}" opacity="${n(alpha)}"/>`;
  const paths=[path(limb(rig.leftHip,...rig.leftLeg),.57),path(limb(rig.leftShoulder,...rig.leftArm),.57),path(`M${pt(p.hip)} C${n(p.hip[0]-2)} ${n(p.hip[1]-27)} ${n(p.neck[0]+2)} ${n(p.neck[1]+30)} ${pt(p.neck)}`),path(`M${pt(rig.leftShoulder)} Q${pt(p.neck)} ${pt(rig.rightShoulder)}`,.45),path(limb(rig.rightHip,...rig.rightLeg)),path(limb(rig.rightShoulder,...rig.rightArm))];

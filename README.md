@@ -51,7 +51,7 @@ python -m pip install -r requirements.txt
 npm run dev
 ```
 
-Abra `http://localhost:4173`. Em **Fonte**, importe sua música. Em **Letra**, cole o texto e gere o storyboard. A sincronização pela voz inicia automaticamente na importação. Para refazer um projeto já aberto, use Letra → Sincronizar letra pela voz; trechos sem âncoras confiáveis continuam marcados para revisão.
+Abra `http://localhost:4173`. Em **Fonte**, importe sua música. Em **Letra**, cole o texto ou deixe vazio: a importação transcreve automaticamente e monta o storyboard. O modo padrão **Rápido** usa Whisper Tiny multilíngue; **Preciso** usa Whisper Small. A sincronização pela voz inicia automaticamente na importação. Para refazer um projeto já aberto, use Letra → Sincronizar letra pela voz; trechos sem âncoras confiáveis continuam marcados para revisão.
 
 O repositório contém a letra, o storyboard e a análise de “Deus nos vê”, usados na primeira entrega. A gravação pessoal e o vídeo de referência não são redistribuídos no código. Para reproduzir o storyboard original com a música original, copie seu MP3 para o caminho esperado:
 
@@ -80,7 +80,8 @@ npm run project -- \
 | --- | --- |
 | `--` depois de `npm run project` | Encaminha os argumentos seguintes ao script. |
 | `--audio` | Arquivo sonoro original. É copiado para `public/media`. |
-| `--lyrics` | Texto autoritativo da letra; a transcrição não o substitui. |
+| `--lyrics` | Letra autoritativa opcional; quando ausente/vazia, o áudio é transcrito automaticamente. |
+| `--model` | Modelo do ASR local automático: `tiny` (padrão rápido), `small` ou caminho local. |
 | `--title` / `--artist` | Título e autoria exibidos no filme. |
 | `--out` | Caminho do projeto JSON gerado. |
 | `--analysis` | Reutiliza uma análise JSON em vez de analisar novamente. |
@@ -88,6 +89,17 @@ npm run project -- \
 | `--language` | `auto`, `pt`, `en`, `es`, `ja`, `ko`, `ru`, `fr`, `de`, `it` ou `zh`; orienta ASR e vocabulário. |
 | `--transcribe` | Executa o ASR opcional antes do alinhamento. |
 | `--reference` | Analisa tecnicamente um vídeo de referência e anexa os dados ao projeto. |
+
+### Sem arquivo de letra
+
+Instale uma vez `python -m pip install -r requirements-asr.txt` e execute:
+
+```bash
+npm run project -- --audio "/caminho/musica.mp3" --title "Minha música" --out projects/import-minha-musica.json
+npm run render -- --project projects/import-minha-musica.json --out output/minha-musica.mp4 --fps 30
+```
+
+A transcrição automática mantém os tempos por palavra e a duração da gravação. Para uma revisão com modelo maior, acrescente `--model small`.
 
 ### Transcrição local opcional
 
@@ -273,16 +285,18 @@ Os close-ups automáticos deixam pelo menos seis segundos de palco livre entre o
 
 351 opções selecionáveis: as 31 cenas originais e 320 composições procedurais em 40 novas famílias. Abismo, vale, farol, casa, mesa, jardim, trem, cartas, fotografia, fogo, mãos e outros mundos possuem geometria própria, com composições de noite, chuva, névoa, fratura, luz, reflexo e retorno. Não são 320 clipes desenhados à mão. A busca em Ajustes encontra famílias e composições; os novos storyboards escolhem pelo vocabulário da letra em português, inglês e espanhol e alternam oito composições antes de repetir uma família. Projetos antigos e escolhas manuais são preservados.
 
-O boneco mantém gestos mais contidos, ombros melhor separados e cotovelos levemente flexionados; planos de descanso preservam a postura sentada. A política de zoom espaçado continua ativa.
+O seletor de personagem oferece **Traço simples**, **Silhueta** e **Manequim**, além dos dois desenhos anteriores. Traço simples é o novo padrão. Os três modelos usam articulações conectadas aos mesmos pontos calculados, cabeça circular estável e rotação contínua dos cotovelos nos gestos altos. O personagem continua seguindo poses e ações expressivas, com pés plantados e transições entre movimentos. A política de zoom espaçado continua ativa.
 
 ## Sincronização pela voz no PWA
 
 A importação da música inicia a sincronização em um worker, inclusive em projetos reabertos que ainda não têm âncoras. Para repetir, use **Letra → Sincronizar letra pela voz**. O andamento e os erros aparecem junto ao botão; a cobertura de âncoras é uma medida diferente do progresso e não representa porcentagem de precisão.
 
-Para letras com escrita latina, o modo **Acústico + voz** alinha os caracteres fornecidos aos sons com CTC/Viterbi e confere regiões incertas com Whisper Small. Âncoras acústicas fracas ou incompatíveis não substituem palavras reconhecidas. A introdução instrumental e as pausas são mantidas; palavras com vogais escritas de forma prolongada, como `GOOOOO`, podem aproveitar a âncora de `Go` sem mudar a letra. O primeiro uso baixa o modelo acústico de aproximadamente 317 MB e, se necessário, Whisper Small. O áudio fica no aparelho; os modelos são armazenados em cache quando o navegador permite. É possível cancelar. Cada janela de transcrição usa um worker novo para liberar a memória dos modelos entre trechos.
+O padrão **Rápido** usa Whisper Tiny multilíngue quantizado. **Preciso** usa Whisper Small. Ambos transcrevem mesmo sem letra. Um único worker carrega o modelo uma vez e percorre janelas de 20 segundos com contexto; silêncio digital é descartado e o andamento inclui texto parcial. O áudio é identificado por SHA-256: reimportar o mesmo arquivo reutiliza análise e transcrição. O botão de reconhecimento permite refazer explicitamente. O modo automático detecta o idioma no início e atualiza periodicamente; letras bilíngues mantêm a detecção por janela.
 
-**Licença dos pesos acústicos:** MMS_FA / a conversão ONNX utilizada são CC-BY-NC-4.0, para uso não comercial. O seletor também oferece **Transcrição de voz multilíngue**, que usa Whisper sem MMS. Outros alfabetos usam essa transcrição. As licenças dos modelos não alteram a licença Apache do código original; veja `THIRD_PARTY_NOTICES.md`.
+Para letras com escrita latina, o modo avançado **Alinhamento acústico** alinha os caracteres fornecidos aos sons com CTC/Viterbi e confere regiões incertas com Whisper Small. Âncoras acústicas fracas ou incompatíveis não substituem palavras reconhecidas. A introdução instrumental e as pausas são mantidas; palavras com vogais escritas de forma prolongada, como `GOOOOO`, podem aproveitar a âncora de `Go` sem mudar a letra. O primeiro uso baixa o modelo acústico de aproximadamente 317 MB e, se necessário, Whisper Small. O áudio fica no aparelho; os modelos são armazenados em cache quando o navegador permite. É possível cancelar. O worker é encerrado ao concluir ou cancelar; não há recarga do modelo a cada janela.
 
-O idioma automático é previsto pelo modelo a cada janela de áudio, orientado pelos idiomas encontrados na letra. Ele não depende do padrão inglês do Transformers.js 3.8.1. Tempos reconhecidos e ajustes manuais são preservados ao regerar. Sobreposição de vozes, palavras ausentes na gravação, rap e voz com muito efeito ainda exigem conferência; não há garantia de alinhamento perfeito para toda música. Deslocamento global corrige apenas atraso constante.
+**Licença dos pesos acústicos:** MMS_FA / a conversão ONNX utilizada são CC-BY-NC-4.0, para uso não comercial. Os modos **Rápido** e **Preciso** usam Whisper sem MMS. Outros alfabetos usam essa transcrição. As licenças dos modelos não alteram a licença Apache do código original; veja `THIRD_PARTY_NOTICES.md`.
+
+O idioma automático é previsto pelo modelo, orientado pelos idiomas encontrados na letra quando ela é fornecida. Ele não depende do padrão inglês do Transformers.js 3.8.1. Tempos reconhecidos e ajustes manuais são preservados ao regerar. Sobreposição de vozes, palavras ausentes na gravação, rap e voz com muito efeito ainda exigem conferência; não há garantia de alinhamento perfeito para toda música. Deslocamento global corrige apenas atraso constante.
 
 Cenas com rótulos temáticos também mantêm a letra cantada visível, por tempo de palavra, acima dos filtros. Na exportação AAC por WASM, a compensação de 1024 amostras remove a latência inicial do encoder; o caminho AAC nativo permanece sem esse ajuste.

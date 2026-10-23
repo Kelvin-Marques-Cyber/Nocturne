@@ -24,7 +24,7 @@ test('bilingual lyrics retain English without confusing similar Portuguese and S
 });
 test('chunk progress advances and timestamps retain their position in the original audio',async()=>{
  const progress:SpeechProgress[]=[];let calls=0;
- const transcript=await transcribeChunks(new Float32Array(41*16000),async(_samples,options)=>{
+ const transcript=await transcribeChunks(new Float32Array(41*16000).fill(.05),async(_samples,options)=>{
   assert.equal(options.language,'pt');assert.equal(options.return_timestamps,'word');assert.equal(options.chunk_length_s,0);
   const index=calls++,start=index?2.5:7.5;
   return{text:'palavra',chunks:[{text:'palavra'+index,timestamp:[start,start+.3]}]};
@@ -38,5 +38,5 @@ test('speech workers receive bounded windows with context rather than the whole 
  assert.ok(windows.every(w=>w.end-w.start<=24));
 });
 test('an unavailable language detector fails explicitly instead of producing an English transcript',async()=>{
- await assert.rejects(transcribeChunks(new Float32Array(16000),async()=>{throw Error('must not decode');},'auto',()=>{}),/detectar o idioma/);
+ await assert.rejects(transcribeChunks(new Float32Array(16000).fill(.05),async()=>{throw Error('must not decode');},'auto',()=>{}),/detectar o idioma/);
 });

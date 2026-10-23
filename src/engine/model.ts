@@ -15,7 +15,7 @@ export interface Word {id:string; text:string;start:number;end:number;line:numbe
 export interface VocalRegion {start:number;end:number;confidence:number}
 export interface VoiceAnalysis {source:'mix'|'isolated';method:string;energy:number[];presence:number[];pitch:number[];confidence:number[]}
 export interface Analysis {duration:number;sampleRate:number;hopSeconds:number;bpm:number;tempoConfidence:number;beats:number[];onsets:number[];impacts:number[];energy:number[];low:number[];high:number[];voice?:VoiceAnalysis;silences:{start:number;end:number}[];vocalRegions:VocalRegion[];sections:{start:number;end:number;energy:number}[];method:string;warnings:string[]}
-export interface Character {name:string;stroke:string;thickness:number;scale:number;head:number;heart:boolean;design?:'ink'|'articulated'}
+export interface Character {name:string;stroke:string;thickness:number;scale:number;head:number;heart:boolean;design?:'ink'|'articulated'|'line'|'silhouette'|'mannequin'}
 export interface Camera {zoomFrom:number;zoomTo:number;panX:number;panY:number;roll:number;shake:number;lyricFocus?:number;focusX?:number;focusY?:number}
 export interface SceneEvent {at:number;duration:number;type:'impact'|'freeze'|'glitch'|'flash'|'word'|'focus';strength:number;wordId?:string;focusMode?:'phrase'|'word';delivery?:Delivery;source?:'auto'|'manual'}
 export interface Motion {action:Action;start:number;end:number;weight?:number}
@@ -47,7 +47,7 @@ export function validateProject(value:unknown): asserts value is Project {
  if(!finite(p.duration)||p.duration<=0||p.duration>7200||![30,60].includes(p.fps)||!['vertical','horizontal'].includes(p.format))throw Error('Duração, formato ou FPS inválidos.');
  if(p.direction!==undefined&&!['reel','worlds'].includes(p.direction))throw Error('Direção inválida.');
  if(p.editProfile!==undefined&&!editProfiles.includes(p.editProfile))throw Error('Referência de montagem inválida.');
- if(p.character?.design!==undefined&&!['ink','articulated'].includes(p.character.design))throw Error('Desenho inválido.');
+ if(p.character?.design!==undefined&&!['ink','articulated','line','silhouette','mannequin'].includes(p.character.design))throw Error('Desenho inválido.');
  if(p.language!==undefined&&!Object.hasOwn(languages,p.language))throw Error('Idioma inválido.');
  if(p.lyricFocusPolicy!==undefined&&p.lyricFocusPolicy!=='balanced-v1')throw Error('Política de zoom inválida.');
  if(p.visualSyncOffsetSeconds!==undefined&&(!finite(p.visualSyncOffsetSeconds)||Math.abs(p.visualSyncOffsetSeconds)>5))throw Error('Deslocamento visual deve estar entre -5 e +5 segundos.');

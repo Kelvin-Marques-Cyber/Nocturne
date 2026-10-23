@@ -17,7 +17,7 @@ export function PerformancePanel({project,scene,word,edit,editScene,seek}:{proje
  }
  const options=(key:'camera'|'typography'|'gesture'|'texture'|'rhythm',label:string,items:{id:string;label:string}[])=><label className="field">{label}<select value={perf?.[key]??''} onChange={e=>patch({[key]:e.target.value,...(key==='gesture'?{followLyrics:false}:{})})}><option value="" disabled>Planejar automaticamente</option>{items.map(x=><option key={x.id} value={x.id}>{x.label}</option>)}</select></label>;
  return <section className="performance-panel"><h3>Direção expressiva</h3><div className="catalog-count"><b>{catalogStats.combinations.toLocaleString('pt-BR')}</b><span>combinações de câmera, tipografia, gestos, textura e ritmo</span></div>
-  <button className="secondary wide" onClick={()=>edit(p=>directPerformance({...p,direction:'reel',character:{...p.character,design:'ink',thickness:1.7,head:.9,heart:false}}))}>Aplicar linguagem do reel</button>
+  <button className="secondary wide" onClick={()=>edit(p=>directPerformance({...p,direction:'reel',character:{...p.character,design:'line',thickness:2.2,head:1,heart:false}}))}>Aplicar linguagem do reel</button>
   <button className="secondary wide" onClick={()=>edit(p=>directPerformance(p))}>Automatizar direção da música</button>
   <button className="secondary wide" onClick={()=>edit(p=>directPerformance(p,Math.max(0,...p.scenes.map(s=>s.performance?.variation??0))+1,false))}>Nova combinação</button>
   <label className="check"><input type="checkbox" checked={perf?.enabled??false} onChange={e=>patch({enabled:e.target.checked})}/> Animação expressiva nesta cena</label>

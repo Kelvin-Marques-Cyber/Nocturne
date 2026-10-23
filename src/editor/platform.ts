@@ -6,6 +6,7 @@ import{alignLyrics,type Transcript}from'../engine/alignment';
 import{createStoryboard}from'../engine/storyboard';
 import{directPerformance}from'../engine/director';
 import{persist,stored}from'../browser/storage';
+import{transcriptLyrics}from'../engine/transcript-lyrics';
 export const browserMode=import.meta.env.VITE_STATIC==='true';
 export const base=import.meta.env.BASE_URL;
 export async function cachedTranscript(audio:string){try{return await stored<Transcript>('transcript:'+audio);}catch{return undefined;}}
@@ -14,7 +15,8 @@ export async function api(path:string,data?:unknown,method='POST'):Promise<any>{
  if(browserMode){
   if(path==='/api/demo')return(await fetch(base+'demo.json')).json();
   if(path==='/api/storyboard'){
-   const{project,lyrics,transcript}=data as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
+   const{project,lyrics:inputLyrics,transcript}=data as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
+   const lyrics=inputLyrics.trim()||!transcript?inputLyrics:transcriptLyrics(transcript);
 
    const aligned=alignLyrics(lyrics,project.analysis,transcript,project.language,project.words,project.title),next:Project={...project,lyrics,words:aligned.words,alignment:{method:aligned.method,coverage:aligned.coverage,notes:aligned.notes,reviewRequired:true},scenes:createStoryboard(lyrics,aligned.words,project.analysis,project.language,project.title)};next.scenes=directPerformance(next,0,false).scenes;validateProject(next);return next;
 
@@ -50,8 +52,10 @@ export async function importAudioFile(file:File):Promise<{audio:string;title:str
   // Only analysis falls back to the browser when Python dependencies are absent.
   return{audio:data.audio,title:data.title,analysis:await analyzeAudioInBrowser(file),analysisFallback:true};
  }
- const analysis=await analyzeAudioInBrowser(file);
- const audio='media/browser-'+[...crypto.getRandomValues(new Uint8Array(12))].map(n=>n.toString(16).padStart(2,'0')).join('')+'.'+file.name.split('.').at(-1)!.toLowerCase();
+ const bytes=await file.arrayBuffer(),digest=await crypto.subtle.digest('SHA-256',bytes),hash=[...new Uint8Array(digest)].map(n=>n.toString(16).padStart(2,'0')).join('');
+ const audio='media/browser-'+hash+'.'+file.name.split('.').at(-1)!.toLowerCase();
+ let analysis=await stored<Analysis>('analysis:'+audio);
+ if(!analysis){analysis=await analyzeAudioInBrowser(file);await persist('analysis:'+audio,analysis);}
  await persist('audio:'+audio,file);
  return{audio,title:file.name.replace(/\.[^.]+$/,''),analysis};
 }
