@@ -25,6 +25,7 @@ type MobilePane='preview'|'scenes'|'lyrics'|'source'|'settings';
 const mobilePanes:Record<MobilePane,string>={preview:'Prévia',scenes:'Cenas',lyrics:'Letra',source:'Áudio',settings:'Ajustes'};
 function App(){
  const [mobilePane,setMobilePane]=useState<MobilePane>('preview');
+ useEffect(()=>{if(window.matchMedia('(max-width:760px)').matches)window.scrollTo({top:0,behavior:'auto'});},[mobilePane]);
  const [project,setProject]=useState<Project>(),[time,setTime]=useState(3),[playing,setPlaying]=useState(false),[selected,setSelected]=useState('s0'),[tab,setTab]=useState<'scenes'|'lyrics'|'source'>('scenes'),[lyrics,setLyrics]=useState(''),[status,setStatus]=useState('Carregando projeto…'),[busy,setBusy]=useState(false),[wordId,setWordId]=useState(''),[exportOpen,setExportOpen]=useState(false),[job,setJob]=useState<{id:string;status:string;percent:number;download?:string;error?:string}>(),[scope,setScope]=useState('full');
  const [audioSource,setAudioSource]=useState<string>(),[offline,setOffline]=useState(!navigator.onLine),[pwaState,setPwaState]=useState(''),[install,setInstall]=useState<(Event&{prompt:()=>Promise<void>})|undefined>();
  const exportAbort=useRef<AbortController|undefined>(undefined);
@@ -88,8 +89,9 @@ function App(){
   try{
    const next=await api('/api/storyboard',{project:{...source,title:lyricContent(draft).title??source.title},lyrics:draft,transcript});
    if(request!==generation.current||lyricsNow.current!==draft||current.current?.id!==source.id||current.current?.audio!==source.audio)return;
-   edit(p=>({...next,style:p.style,character:p.character}));setSelected(sceneAt(next,Math.min(time,next.duration-.001)).id);setWordId('');
-   setStatus(`${next.words.length} palavras e ${next.scenes.length} cenas geradas automaticamente. Tempos ${next.alignment.coverage?'parcialmente reconhecidos':'estimados'} pelo áudio.`);return next;
+   const ready={...next,style:current.current.style,character:current.current.character};
+   edit(()=>ready);setSelected(sceneAt(ready,Math.min(time,ready.duration-.001)).id);setWordId('');
+   setStatus(`${ready.words.length} palavras e ${ready.scenes.length} cenas geradas automaticamente. Tempos ${ready.alignment.coverage?'parcialmente reconhecidos':'estimados'} pelo áudio.`);return ready;
   }catch(e){if(request===generation.current)setStatus(String(e));}
   finally{if(request===generation.current)setBusy(false);}
  }
@@ -109,7 +111,7 @@ function App(){
   try{validateProject(project);saveEditorDraft(project,lyrics);updateRequested.current=true;if(waitingWorker.state==='activated'||navigator.serviceWorker.controller===waitingWorker)window.location.reload();else waitingWorker.postMessage({type:'NOCTURNE_ACTIVATE_UPDATE'});}
   catch(error){updateRequested.current=false;setStatus('Salve o JSON antes de atualizar: '+String(error));}
  }
- async function render(){if(!project||!scene)return;const ready=lyricsNow.current!==project.lyrics?await generate():project;if(!ready)return;const shot=ready.scenes.find(s=>s.id===selected)??sceneAt(ready,time);setBusy(true);audio.current?.pause();try{
+ async function render(){if(!project||!scene)return;const pending=lyricsNow.current!==project.lyrics,ready=pending?await generate():project;if(!ready)return;const shot=pending?sceneAt(ready,time):ready.scenes.find(s=>s.id===selected)??sceneAt(ready,time);setBusy(true);audio.current?.pause();try{
   validateProject(ready);const segment=scope==='scene'?{from:shot.start,duration:shot.end-shot.start}:scope==='excerpt'?{from:time,duration:Math.min(15,ready.duration-time)}:{};
   if(browserMode){const id='browser-'+Date.now(),controller=new AbortController();exportAbort.current=controller;setJob({id,status:'rendering',percent:0});const {renderBrowserVideo}=await import('../browser/render');const blob=await renderBrowserVideo(ready,{...segment,signal:controller.signal,onProgress:percent=>setJob({id,status:'rendering',percent})});setJob({id,status:'complete',percent:100,download:URL.createObjectURL(blob)});}
   else{const j=await api('/api/render',{project:ready,...segment});setJob({...j,percent:0});}

@@ -10,5 +10,6 @@ for(const url of shell){assert.ok(url.startsWith(build.base));assert.ok((await s
 for(const url of [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m=>m[1])){assert.ok(url.startsWith(build.base),url);assert.ok((await stat('dist/'+url.slice(build.base.length))).isFile());}
 for(const name of await readdir('dist',{recursive:true}))assert.ok(!/\.(mp3|wav|flac|mp4|mov|webm)$/i.test(name),'Áudio/vídeo privado no build: '+name);
 for(const size of [192,512]){const png=await readFile('dist/icon-'+size+'.png');assert.equal(png.readUInt32BE(16),size);assert.equal(png.readUInt32BE(20),size);}
+const fontCss=await readFile('dist/font.css','utf8');for(const match of fontCss.matchAll(/url\('\.\/([^']+)'\)/g)){if(match[1]==='NotoSansCJKjp-Regular.otf')continue;assert.ok(shell.includes(build.base+match[1]),'Offline font missing: '+match[1]);}
 assert.ok(shell.includes(build.base+'demo.json'));assert.ok(shell.includes(build.base+'DejaVuSansMono.ttf'));assert.ok(shell.includes(build.base+'licenses/NOTICE.txt'));
 console.log(JSON.stringify({passed:true,base:build.base,precacheFiles:shell.length,privateMedia:0,manifest:true,icons:true,relativeAssets:true,licenses:true}));
