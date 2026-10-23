@@ -45,7 +45,7 @@ const server=createServer(async(req,res)=>{
    const {project,lyrics,transcript}=await parse(req)as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
    if(typeof lyrics!=='string'||lyrics.length>100000)throw Error('Letra inválida.');
    if(transcript&&(!Array.isArray(transcript.segments)||transcript.segments.some(s=>!Array.isArray(s.words))))throw Error('Transcrição deve conter segments[].words[].');
-   const a=alignLyrics(lyrics,project.analysis,transcript,project.language),next={...project,lyrics,words:a.words,alignment:{method:a.method,coverage:a.coverage,notes:a.notes,reviewRequired:true}};
+   const a=alignLyrics(lyrics,project.analysis,transcript,project.language,project.words),next={...project,lyrics,words:a.words,alignment:{method:a.method,coverage:a.coverage,notes:a.notes,reviewRequired:true}};
    next.scenes=createStoryboard(lyrics,a.words,project.analysis,project.language);next.scenes=directPerformance(next,0,false).scenes;validateProject(next);await ensureProjectFonts(next);json(res,next);return;
   }
   if(pathname==='/api/fonts'&&req.method==='POST'){const p=await parse(req);if(typeof p.lyrics!=='string')throw Error('Letra inválida.');await ensureProjectFonts(p);json(res,{ready:true});return;}

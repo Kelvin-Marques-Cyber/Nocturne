@@ -13,7 +13,7 @@ export async function api(path:string,data?:unknown,method='POST'):Promise<any>{
   if(path==='/api/demo')return(await fetch(base+'demo.json')).json();
   if(path==='/api/storyboard'){
    const{project,lyrics,transcript}=data as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
-   const aligned=alignLyrics(lyrics,project.analysis,transcript,project.language),next:Project={...project,lyrics,words:aligned.words,alignment:{method:aligned.method,coverage:aligned.coverage,notes:aligned.notes,reviewRequired:true},scenes:createStoryboard(lyrics,aligned.words,project.analysis,project.language)};next.scenes=directPerformance(next,0,false).scenes;validateProject(next);return next;
+   const aligned=alignLyrics(lyrics,project.analysis,transcript,project.language,project.words),next:Project={...project,lyrics,words:aligned.words,alignment:{method:aligned.method,coverage:aligned.coverage,notes:aligned.notes,reviewRequired:true},scenes:createStoryboard(lyrics,aligned.words,project.analysis,project.language)};next.scenes=directPerformance(next,0,false).scenes;validateProject(next);return next;
   }
   if(path==='/api/project'){const project=data as Project;validateProject(project);await persist('project:'+project.id,project);return{saved:true};}
   throw Error('Esta operação requer o aplicativo local.');
