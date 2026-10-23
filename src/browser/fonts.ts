@@ -19,28 +19,47 @@ export async function loadFilmFonts(text:string){
  }
  await document.fonts.ready;return fonts;
 }
-// SVG rendered as an image cannot borrow document web fonts. Convert text to
-// glyph contours once per distinct string/size, preserving the preview layout.
+// SVG-as-image cannot inherit document fonts. Convert the engine's simple
+// <text> elements into cached glyph paths without parsing and serializing the
+// *entire* animated SVG tree for every exported frame.
+const textPattern=/<text\b([^>]*)>([^<]*)<\/text>/g;
+const attributePattern=/([:\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+const excluded=new Set(['x','y','font-size','font-family','text-anchor','letter-spacing','font-weight','font-style','font-kerning','transform']);
+function decodeXmlText(value:string){
+ return value.replace(/&(#(?:x[\da-f]+|\d+)|amp|lt|gt|quot|apos);/gi,(match,entity:string)=>{
+  if(entity[0]==='#'){
+   const hex=entity[1]?.toLowerCase()==='x',code=Number.parseInt(entity.slice(hex?2:1),hex?16:10);
+   return Number.isInteger(code)&&code>=0&&code<=0x10ffff?String.fromCodePoint(code):match;
+  }
+  return ({amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"} as Record<string,string>)[entity.toLowerCase()]??match;
+ });
+}
 export function outlineText(svg:string,fonts:Font[],cache:Map<string,{d:string;width:number}>){
- const doc=new DOMParser().parseFromString(svg,'image/svg+xml');
- for(const text of doc.querySelectorAll('text')){
-  const value=(text.textContent??'').normalize('NFC'),size=Number(text.getAttribute('font-size')??16),family=(text.getAttribute('font-family')??'DejaVu Sans Mono').split(',')[0].replace(/['"]/g,'').trim(),weight=Number(text.getAttribute('font-weight')??400),italic=['oblique','italic'].includes(text.getAttribute('font-style')??''),spacing=Number(text.getAttribute('letter-spacing')??0);
-  const primary=fonts.find(f=>{const face=faceInfo.get(f);return face?.family===family&&face.weight===weight&&face.italic===italic;})??fonts[0],key=[family,weight,italic,value,size,spacing,fonts.length].join('|');
+ return svg.replace(textPattern,(_tag:string,rawAttrs:string,encoded:string)=>{
+  const attrs=new Map<string,string>();
+  for(const match of rawAttrs.matchAll(attributePattern))attrs.set(match[1],match[2]??match[3]??'');
+  const value=decodeXmlText(encoded).normalize('NFC'),size=Number(attrs.get('font-size')??16);
+  const family=(attrs.get('font-family')??'DejaVu Sans Mono').split(',')[0].replace(/['"]/g,'').trim();
+  const weight=Number(attrs.get('font-weight')??400),italic=['oblique','italic'].includes(attrs.get('font-style')??'');
+  const spacing=Number(attrs.get('letter-spacing')??0);
+  const primary=fonts.find(f=>{const face=faceInfo.get(f);return face?.family===family&&face.weight===weight&&face.italic===italic;})??fonts[0];
+  const key=[family,weight,italic,value,size,spacing,fonts.length].join('|');
   let cached=cache.get(key);
   if(!cached){
    let width=0;
-   const glyphs=[...value].map(char=>{const font=primary.charToGlyphIndex(char)!==0?primary:fonts.find(f=>f.charToGlyphIndex(char)!==0)??primary;return{font,glyph:font.charToGlyph(char)};});
    const parts:string[]=[];
-   for(const {font,glyph}of glyphs){parts.push(glyph.getPath(width,0,size).toPathData(3));width+=(glyph.advanceWidth??font.unitsPerEm*.61)*size/font.unitsPerEm+spacing;}
-   cached={d:parts.join(''),width:Math.max(0,width-(glyphs.length?spacing:0))};
+   for(const char of value){
+    const font=primary.charToGlyphIndex(char)!==0?primary:fonts.find(f=>f.charToGlyphIndex(char)!==0)??primary;
+    const glyph=font.charToGlyph(char);
+    parts.push(glyph.getPath(width,0,size).toPathData(3));
+    width+=(glyph.advanceWidth??font.unitsPerEm*.61)*size/font.unitsPerEm+spacing;
+   }
+   cached={d:parts.join(''),width:Math.max(0,width-(value.length?spacing:0))};
    cache.set(key,cached);
   }
-  const {d,width}=cached;
-  const path=doc.createElementNS('http://www.w3.org/2000/svg','path');
-  for(const attr of text.attributes)if(!['x','y','font-size','font-family','text-anchor','letter-spacing','font-weight','font-style','font-kerning'].includes(attr.name))path.setAttribute(attr.name,attr.value);
-  const transform=text.getAttribute('transform')??'',x=Number(text.getAttribute('x')??0),y=Number(text.getAttribute('y')??0);
-  const anchor=text.getAttribute('text-anchor'),offset=anchor==='middle'?width/2:anchor==='end'?width:0;
-  path.setAttribute('transform',transform+` translate(${x-offset} ${y})`);path.setAttribute('d',d);text.replaceWith(path);
- }
- return new XMLSerializer().serializeToString(doc);
+  const offset=attrs.get('text-anchor')==='middle'?cached.width/2:attrs.get('text-anchor')==='end'?cached.width:0;
+  const transform=(attrs.get('transform')??'')+` translate(${Number(attrs.get('x')??0)-offset} ${Number(attrs.get('y')??0)})`;
+  const preserved=[...attrs].filter(([name])=>!excluded.has(name)).map(([name,v])=>`${name}="${v}"`).join(' ');
+  return `<path ${preserved} transform="${transform}" d="${cached.d}"/>`;
+ });
 }
