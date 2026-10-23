@@ -47,7 +47,7 @@ export async function renderBrowserVideo(project:Project,options:BrowserRenderOp
   prepared=startPrepare(0);
   for(let frame=0;frame<total;frame++){
    if(options.signal?.aborted)throw Error('Renderização cancelada.');
-   const current=await prepared;
+   const current=await prepared!;
    prepared=frame+1<total?startPrepare(frame+1):undefined;
    try{context.drawImage(current.source,0,0,w,h);}finally{current.dispose();}
    await video.add(frame/fps,Math.min(1/fps,duration-frame/fps));
