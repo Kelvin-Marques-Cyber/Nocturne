@@ -23,11 +23,31 @@ export async function api(path:string,data?:unknown,method='POST'):Promise<any>{
 export async function audioBlob(audio:string){const blob=browserMode?await stored<Blob>('audio:'+audio):undefined;if(blob)return blob;const r=await fetch(base+audio);if(!r.ok||!(r.headers.get('Content-Type')??'').startsWith('audio/'))throw Error('Importe sua música na aba Fonte para ouvir e exportar.');return r.blob();}
 export async function audioURL(audio:string){return browserMode?URL.createObjectURL(await audioBlob(audio)):base+audio;}
 export async function decodeAudio(blob:Blob,sampleRate=22050){const context=new OfflineAudioContext(2,1,sampleRate);return context.decodeAudioData(await blob.arrayBuffer());}
-export async function importAudioFile(file:File):Promise<{audio:string;title:string;analysis:Analysis}>{
- if(!/\.(mp3|wav|flac)$/i.test(file.name)||file.size>256*1024*1024)throw Error('Importe MP3, WAV ou FLAC de até 256 MB.');
- if(!browserMode){const response=await fetch('/api/audio?name='+encodeURIComponent(file.name),{method:'POST',body:file}),data=await response.json();if(!response.ok)throw Error(data.error);return data;}
- const buffer=await decodeAudio(file),mono=new Float32Array(buffer.length);for(let c=0;c<buffer.numberOfChannels;c++){const values=buffer.getChannelData(c);for(let i=0;i<values.length;i++)mono[i]+=values[i]/buffer.numberOfChannels;}
+async function analyzeAudioInBrowser(file:File):Promise<Analysis>{
+ const buffer=await decodeAudio(file),mono=new Float32Array(buffer.length);
+ for(let c=0;c<buffer.numberOfChannels;c++){
+  const values=buffer.getChannelData(c);
+  for(let i=0;i<values.length;i++)mono[i]+=values[i]/buffer.numberOfChannels;
+ }
  const worker=new Worker(new URL('../browser/analysis-worker.ts',import.meta.url),{type:'module'});
- const analysis=await new Promise<Analysis>((resolve,reject)=>{worker.onmessage=e=>{worker.terminate();if(e.data.error)reject(Error(e.data.error));else resolve(e.data.analysis);};worker.onerror=e=>{worker.terminate();reject(Error(e.message));};worker.postMessage({samples:mono,sampleRate:buffer.sampleRate},[mono.buffer]);});
- const audio='media/browser-'+[...crypto.getRandomValues(new Uint8Array(12))].map(n=>n.toString(16).padStart(2,'0')).join('')+'.'+file.name.split('.').at(-1)!.toLowerCase();await persist('audio:'+audio,file);return{audio,title:file.name.replace(/\.[^.]+$/,''),analysis};
+ return new Promise<Analysis>((resolve,reject)=>{
+  worker.onmessage=e=>{worker.terminate();if(e.data.error)reject(Error(e.data.error));else resolve(e.data.analysis);};
+  worker.onerror=e=>{worker.terminate();reject(Error(e.message));};
+  worker.postMessage({samples:mono,sampleRate:buffer.sampleRate},[mono.buffer]);
+ });
+}
+export async function importAudioFile(file:File):Promise<{audio:string;title:string;analysis:Analysis;analysisFallback?:boolean}>{
+ if(!/\\.(mp3|wav|flac)$/i.test(file.name)||file.size>256*1024*1024)throw Error('Importe MP3, WAV ou FLAC de até 256 MB.');
+ if(!browserMode){
+  const response=await fetch('/api/audio?name='+encodeURIComponent(file.name),{method:'POST',body:file}),data=await response.json();
+  if(!response.ok)throw Error(data.error??'Falha ao enviar o áudio.');
+  if(data.analysis)return data;
+  // The server has already saved the file for playback and FFmpeg rendering.
+  // Only analysis falls back to the browser when Python dependencies are absent.
+  return{audio:data.audio,title:data.title,analysis:await analyzeAudioInBrowser(file),analysisFallback:true};
+ }
+ const analysis=await analyzeAudioInBrowser(file);
+ const audio='media/browser-'+[...crypto.getRandomValues(new Uint8Array(12))].map(n=>n.toString(16).padStart(2,'0')).join('')+'.'+file.name.split('.').at(-1)!.toLowerCase();
+ await persist('audio:'+audio,file);
+ return{audio,title:file.name.replace(/\\.[^.]+$/,''),analysis};
 }
