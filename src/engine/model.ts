@@ -15,14 +15,14 @@ export interface VoiceAnalysis {source:'mix'|'isolated';method:string;energy:num
 export interface Analysis {duration:number;sampleRate:number;hopSeconds:number;bpm:number;tempoConfidence:number;beats:number[];onsets:number[];impacts:number[];energy:number[];low:number[];high:number[];voice?:VoiceAnalysis;silences:{start:number;end:number}[];vocalRegions:VocalRegion[];sections:{start:number;end:number;energy:number}[];method:string;warnings:string[]}
 export interface Character {name:string;stroke:string;thickness:number;scale:number;head:number;heart:boolean}
 export interface Camera {zoomFrom:number;zoomTo:number;panX:number;panY:number;roll:number;shake:number;lyricFocus?:number;focusX?:number;focusY?:number}
-export interface SceneEvent {at:number;duration:number;type:'impact'|'freeze'|'glitch'|'flash'|'word'|'focus';strength:number;wordId?:string;focusMode?:'phrase'|'word';delivery?:Delivery}
+export interface SceneEvent {at:number;duration:number;type:'impact'|'freeze'|'glitch'|'flash'|'word'|'focus';strength:number;wordId?:string;focusMode?:'phrase'|'word';delivery?:Delivery;source?:'auto'|'manual'}
 export interface Motion {action:Action;start:number;end:number;weight?:number}
 export interface Scene {id:string;start:number;end:number;kind:SceneKind;title:string;intent:string;code:string;wordIds:string[];accent:string;variant:number;camera:Camera;motions:Motion[];events:SceneEvent[];transition:typeof transitions[number];performance?:Performance;meaning?:{language:Language;concepts:string[];keywords:string[]}}
 export const filterTypes=textureKinds;
 export type FilterType=typeof filterTypes[number];
 export interface FilmFilter{id:string;type:FilterType;amount:number;enabled:boolean}
 export interface Style {name:'terminal-noir'|'chalk'|'signal'|'datamosh'|'acid-industrial'|'emerald';filters?:FilmFilter[];background:string;foreground:string;accent:string;grain:number;glitch:number;chromatic:number;vhs:number;captions:boolean}
-export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
+export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;lyricFocusPolicy?:'balanced-v1';seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
 const fx=(type:FilterType,amount:number):FilmFilter=>({id:type,type,amount,enabled:true});
 export const styles:Record<Style['name'],Style>={
  'terminal-noir':{name:'terminal-noir',background:'#08090b',foreground:'#e9e5dc',accent:'#ed3e43',grain:.22,glitch:.28,chromatic:.35,vhs:.16,captions:true},
@@ -44,6 +44,7 @@ export function validateProject(value:unknown): asserts value is Project {
  if(!p||p.schemaVersion!==1||!Array.isArray(p.scenes)||!p.scenes.length||!Array.isArray(p.words)||typeof p.audio!=='string'||typeof p.lyrics!=='string')throw Error('Projeto JSON inválido (schemaVersion = 1).');
  if(!finite(p.duration)||p.duration<=0||p.duration>7200||![30,60].includes(p.fps)||!['vertical','horizontal'].includes(p.format))throw Error('Duração, formato ou FPS inválidos.');
  if(p.language!==undefined&&!Object.hasOwn(languages,p.language))throw Error('Idioma inválido.');
+ if(p.lyricFocusPolicy!==undefined&&p.lyricFocusPolicy!=='balanced-v1')throw Error('Política de zoom inválida.');
  if(!p.analysis||!Array.isArray(p.analysis.beats)||!Array.isArray(p.analysis.energy)||!finite(p.analysis.hopSeconds)||p.analysis.hopSeconds<=0)throw Error('Análise de áudio inválida.');
  if(p.analysis.voice){const v=p.analysis.voice,length=v.energy?.length;if(!['mix','isolated'].includes(v.source)||typeof v.method!=='string'||!length||length>Math.ceil(p.duration/p.analysis.hopSeconds)+3||[v.energy,v.presence,v.confidence,v.pitch].some(xs=>!Array.isArray(xs)||xs.length!==length||xs.some(x=>!finite(x)||x<0))||[v.energy,v.presence,v.confidence].some(xs=>xs.some(x=>x>1))||v.pitch.some(x=>x>2000))throw Error('Contorno vocal inválido.');}
  if(!p.style||!p.character||!finite(p.seed)||!finite(p.character.scale)||p.character.scale<=0||!finite(p.character.head)||!finite(p.character.thickness))throw Error('Personagem ou estilo inválido.');
@@ -63,7 +64,7 @@ export function validateProject(value:unknown): asserts value is Project {
   for(const v of [s.camera.focusX,s.camera.focusY])if(v!==undefined&&(v<0||v>1))throw Error('O ponto de interesse da câmera deve estar dentro do quadro.');
   if(s.camera.lyricFocus!==undefined&&(s.camera.lyricFocus<0||s.camera.lyricFocus>1))throw Error('O foco da letra deve estar entre zero e um.');
   for(const m of s.motions)if(!actions.includes(m.action)||!finite(m.start)||!finite(m.end)||m.end<=m.start)throw Error('Movimento inválido.');
-  for(const e of s.events)if(!finite(e.at)||!finite(e.duration)||e.duration<=0||!finite(e.strength)||!['impact','freeze','glitch','flash','word','focus'].includes(e.type)||(e.wordId&&!ids.has(e.wordId))||(e.delivery!==undefined&&!deliveries.includes(e.delivery))||(e.type==='focus'&&(!e.wordId||!s.wordIds.includes(e.wordId)||e.duration>12||e.strength<0||e.strength>1||!['phrase','word'].includes(e.focusMode??'phrase'))))throw Error('Evento inválido.');
+  for(const e of s.events)if(!finite(e.at)||!finite(e.duration)||e.duration<=0||!finite(e.strength)||!['impact','freeze','glitch','flash','word','focus'].includes(e.type)||(e.wordId&&!ids.has(e.wordId))||(e.source!==undefined&&!['auto','manual'].includes(e.source))||(e.delivery!==undefined&&!deliveries.includes(e.delivery))||(e.type==='focus'&&(!e.wordId||!s.wordIds.includes(e.wordId)||e.duration>12||e.strength<0||e.strength>1||!['phrase','word'].includes(e.focusMode??'phrase'))))throw Error('Evento inválido.');
   previous=s.end;
  }
  if(Math.abs(previous-p.duration)>.002)throw Error('O storyboard deve cobrir a duração integral do áudio.');

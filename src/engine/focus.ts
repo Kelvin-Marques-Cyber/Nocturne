@@ -12,38 +12,51 @@ import{beatResponse}from'./beat';
 export interface LyricFocus {event:SceneEvent;anchor:Word;words:Word[];start:number;end:number;amount:number;mode:'phrase'|'word';delivery:VocalDelivery;}
 const emphasis:Record<string,number>={ve:16,coracoes:13,coracao:13,constelacoes:9,estrelas:7,correr:12,ficar:10,livre:12,chamar:13,esconder:14,alma:11,caio:11,levanto:12,fugir:15,encontrar:12,pequeno:10,ninguem:10,emocoes:12,vontade:12,controlar:14,descansar:17,sei:6};
 function phraseFor(scene:Scene,words:Word[],anchor:Word){return words.filter(w=>w.line===anchor.line&&scene.wordIds.includes(w.id));}
+// Older manual phrase controls included delivery=auto; older word controls
+// used a 1.7s duration. Preserve them when migrating untagged projects.
+const manualFocus=(event:SceneEvent)=>event.source==='manual'||event.source===undefined&&(event.delivery!==undefined||event.focusMode==='word'&&event.duration===1.7);
 function windowFor(scene:Scene,words:Word[],anchor:Word,event:SceneEvent){
  const line=phraseFor(scene,words,anchor),fast=event.focusMode==='word',start=Math.max(scene.start+.025,anchor.start-(fast?.12:.22));
- const lineEnd=line.at(-1)?.end??anchor.end,end=Math.min(scene.end-.025,Math.max(anchor.end+.18,Math.min(lineEnd+.24,anchor.start+event.duration)));
+ const lineEnd=line.at(-1)?.end??anchor.end,limit=anchor.start+(manualFocus(event)?event.duration:Math.min(4.2,event.duration));
+ // Estimated timestamps can stretch one word across a long instrumental gap.
+ // Only a manual cue may override its intended screen duration that way.
+ const end=Math.min(scene.end-.025,manualFocus(event)?Math.max(anchor.end+.18,Math.min(lineEnd+.24,limit)):Math.min(lineEnd+.24,limit));
  return{line,start,end};
 }
-// Only selected meanings become close-ups. The gaps preserve scenes and let
-// a wide shot breathe before the next vocal emphasis. Word IDs are the clock.
+export function rebalanceLyricFocus(project:Project):Project{
+ if(project.lyricFocusPolicy==='balanced-v1')return project;
+ return{...project,lyricFocusPolicy:'balanced-v1',scenes:planLyricFocus(project.scenes,project.words,project.language,project.analysis)};
+}
+// Close-ups are punctuation. Ordinary lines and quiet delivery leave the
+// stage visible; vocal peaks and occasional strong meanings earn a short cut.
 export function planLyricFocus(scenes:Scene[],words:Word[],language:Language='auto',analysis?:Analysis):Scene[]{
  let previousEnd=-10;
+ const stageGap=6,manualWindows=scenes.flatMap(s=>s.events.filter(e=>e.type==='focus'&&manualFocus(e)).flatMap(e=>{const w=words.find(w=>w.id===e.wordId);return w?[windowFor(s,words,w,e)]:[];}));
  return scenes.map(s=>{
-  const events=s.events.filter(e=>e.type!=='focus'),ws=words.filter(w=>s.wordIds.includes(w.id));
+  const events=s.events.filter(e=>e.type!=='focus'||manualFocus(e)),ws=words.filter(w=>s.wordIds.includes(w.id));
   if(s.end-s.start<.55||!ws.length)return{...s,events};
   const candidates=ws.map(w=>{
-   const key=normalize(w.text),line=phraseFor(s,words,w),alone=line.length===1;
-   const meaning=analyzeMeaning(w.text,language),negative=meaning.hits.some(h=>h.concept==='refusal');
-   const score=negative?(alone?100:0):Math.max(emphasis[key]??0,wordEmphasis(w.text,language))+(s.kind==='television'?1:0);
-   const mode=alone||key==='constelacoes'||meaning.kind==='rest'||meaning.kind==='corridor'?'word' as const:'phrase' as const;
-   const anchor=analysis&&mode==='phrase'?line[0]:w;
-   const event:SceneEvent={at:anchor.start,duration:mode==='word'?1.4:analysis?Math.min(12,(line.at(-1)?.end??anchor.end)-anchor.start+.5):2.6,type:'focus',strength:1,wordId:anchor.id,focusMode:mode};
-   return{w:anchor,score,event,window:windowFor(s,words,anchor,event)};
+   const key=normalize(w.text),line=phraseFor(s,words,w),alone=line.length===1,meaning=analyzeMeaning(w.text,language),negative=meaning.hits.some(h=>h.concept==='refusal');
+   const score=negative?(alone?100:0):Math.max(emphasis[key]??0,wordEmphasis(w.text,language));
+   const mode=alone||key==='constelacoes'||meaning.kind==='rest'||meaning.kind==='corridor'?'word' as const:'phrase' as const,anchor=analysis&&mode==='phrase'?line[0]:w;
+   const event:SceneEvent={at:anchor.start,duration:mode==='word'?1.4:Math.min(2.6,(line.at(-1)?.end??anchor.end)-anchor.start+.3),type:'focus',strength:1,wordId:anchor.id,focusMode:mode,source:'auto'};
+   return{w:anchor,score,event,vocal:false,window:windowFor(s,words,anchor,event)};
   });
   if(analysis)for(const line of new Set(ws.map(w=>w.line))){
-   const phrase=ws.filter(w=>w.line===line),delivery=vocalDelivery(analysis,phrase),w=phrase[0];
-   // Whole-line vocal emphasis outranks lexical hints, including unknown lyrics.
-   if(phrase.length&&((delivery.source==='spectral'&&delivery.kind!=='neutral')||!candidates.some(c=>c.w.line===line&&c.score>8))){
-    const event:SceneEvent={type:'focus',at:w.start,duration:Math.min(12,phrase.at(-1)!.end-w.start+.5),strength:1,wordId:w.id,focusMode:'phrase'};
-    candidates.push({w,score:delivery.kind==='shout'?150:delivery.kind==='neutral'?8:60,event,window:windowFor(s,words,w,event)});
+   const phrase=ws.filter(w=>w.line===line),delivery=vocalDelivery(analysis,phrase);
+   const held=phrase.find(w=>(w.source==='manual'||w.source==='asr'||/(\p{L})\1{2,}/iu.test(w.text))&&wordSustain(analysis,w,w.start+(w.end-w.start)*.65)>.12);
+   const emphasized=delivery.source==='spectral'&&delivery.confidence>=.4&&(delivery.kind==='shout'||delivery.kind==='rising'&&(delivery.rise>3||delivery.peak>.6));
+   if(held||emphasized){
+    const w=held??phrase[0],event:SceneEvent={type:'focus',at:w.start,duration:held?Math.min(4.2,w.end-w.start+.35):Math.min(2.6,phrase.at(-1)!.end-w.start+.3),strength:1,wordId:w.id,focusMode:held?'word':'phrase',source:'auto'};
+    candidates.push({w,score:delivery.kind==='shout'?150:held?110:90,event,vocal:true,window:windowFor(s,words,w,event)});
    }
   }
   candidates.sort((a,b)=>b.score-a.score||a.w.start-b.w.start);
   const selected:typeof candidates=[];
-  for(const c of candidates){if(c.score<=5||c.window.end-c.window.start<=.48||c.window.start<previousEnd+.55||selected.some(x=>c.window.start<x.window.end+.45&&c.window.end>x.window.start-.45))continue;selected.push(c);if(selected.length>=(analysis?.voice?Math.max(1,Math.min(3,Math.floor((s.end-s.start)/2.1))):1))break;}
+  for(const c of candidates){
+   if(c.score<15||c.window.end-c.window.start<=.48||!c.vocal&&c.window.start<s.start+.6||c.window.start<previousEnd+stageGap||[...selected.map(x=>x.window),...manualWindows].some(x=>c.window.start<x.end+stageGap&&c.window.end>x.start-stageGap))continue;
+   selected.push(c);if(selected.length>=Math.max(1,Math.floor((s.end-s.start)/16)))break;
+  }
   selected.sort((a,b)=>a.window.start-b.window.start);
   for(const c of selected){events.push(c.event);previousEnd=c.window.end;}
   return{...s,camera:{...s.camera,lyricFocus:s.camera.lyricFocus??1},events};

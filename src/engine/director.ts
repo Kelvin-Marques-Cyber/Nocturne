@@ -32,5 +32,5 @@ export function directPerformance(project:Project,variation=0,replan=true):Proje
   previousCamera=camera.id;previousType=type.id;previousTexture=texture.id;
   return{...scene,performance:{enabled:true,camera:camera.id,typography:type.id,gesture:gesture.id,texture:texture.id,rhythm:rhythm.id,intensity:gentle?.45:shout?1:.72,variation,beatSync:gentle?.3:.7,beatStyle:beatStyles[index%beatStyles.length]}};
  });
- return{...project,scenes};
+ return{...project,...(replan?{lyricFocusPolicy:'balanced-v1' as const}:{}),scenes};
 }

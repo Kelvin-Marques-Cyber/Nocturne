@@ -260,3 +260,7 @@ O catálogo agora oferece 31 cenários, incluindo guitarra, piano e bateria com 
 Notas prolongadas recebem extensão, contornos em rastro e um traço oscilante durante o intervalo da palavra. A grafia comum também funciona com duração e presença vocal; letras repetidas, como uma vogal estendida, são uma indicação adicional. Os tempos estimados limitam a precisão dessa reação e podem ser corrigidos no editor.
 
 Colar ou editar a letra atualiza palavras, cenas e direção após uma breve pausa. Títulos antes da primeira seção e indicações entre colchetes não são tratados como canto. A sincronização sem transcrição continua estimada pelo áudio. A cena e as palavras acompanham a navegação na faixa. No celular, Prévia, Cenas, Letra, Áudio e Ajustes têm áreas próprias, com campos legíveis, controles para toque e rolagem disponível com o teclado aberto.
+
+### Ritmo dos zooms
+
+Os close-ups automáticos deixam pelo menos seis segundos de palco livre entre os destaques. Frases comuns e canto suave não acionam zoom por si só. Gritos, crescendos claros, notas prolongadas com tempos confiáveis e algumas palavras de forte ênfase podem gerar aproximações curtas. Um timestamp estimado muito longo não mantém a tela presa na letra. Projetos salvos recebem esse planejamento uma vez ao carregar, preservando letra, tempos, cenas, estilo e interpretações escolhidas manualmente.

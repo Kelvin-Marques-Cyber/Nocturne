@@ -12,7 +12,7 @@ export function PerformancePanel({project,scene,word,edit,editScene,seek}:{proje
  function patch(value:Partial<Performance>){const base=perf??directPerformance(project,0,false).scenes.find(s=>s.id===scene.id)!.performance!;editScene({performance:{...base,...value}});}
  function focus(override:Delivery=event?.delivery??'auto'){
   const first=line[0];if(!first)return;
-  const cue:SceneEvent={type:'focus',wordId:first.id,at:first.start,duration:Math.min(12,line.at(-1)!.end-first.start+.5),strength:1,focusMode:'phrase',delivery:override};
+  const cue:SceneEvent={type:'focus',wordId:first.id,at:first.start,duration:Math.min(12,line.at(-1)!.end-first.start+.5),strength:1,focusMode:'phrase',delivery:override,source:'manual'};
   editScene({camera:{...scene.camera,lyricFocus:1},events:[...scene.events.filter(e=>e.type!=='focus'||!line.some(w=>w.id===e.wordId)),cue]});seek(Math.min(scene.end-.03,first.start+.3));
  }
  const options=(key:'camera'|'typography'|'gesture'|'texture'|'rhythm',label:string,items:{id:string;label:string}[])=><label className="field">{label}<select value={perf?.[key]??''} onChange={e=>patch({[key]:e.target.value,...(key==='gesture'?{followLyrics:false}:{})})}><option value="" disabled>Planejar automaticamente</option>{items.map(x=><option key={x.id} value={x.id}>{x.label}</option>)}</select></label>;
