@@ -2,11 +2,13 @@
 // Copyright 2026 Kelvin e Silva Marques
 import type{SceneKind}from'./model';
 import{lexical,scriptLanguage,type Language}from'./language';
+import{worldSpecs}from'./scene-catalog';
 type Lexicon=Partial<Record<Exclude<Language,'auto'>,string>>;
 interface Concept{id:string;kind:SceneKind;weight:number;focus:number;terms:Lexicon;}
 // Deliberately inspectable vocabulary, not a claim of general language
 // understanding. Phrases outrank isolated nouns; mixed-language songs work too.
 export const concepts:Concept[]=[
+ ...worldSpecs.map(s=>({id:s.kind,kind:s.kind,weight:s.kind==='cross'?36:s.kind==='valley'?34:s.kind==='hands'?26:33,focus:12,terms:s.terms})),
  {id:'bridge',kind:'bridge',weight:32,focus:14,terms:{pt:'ponte|travessia|atravessar',en:'bridge|crossing over',es:'puente|travesía'}},
  {id:'forest',kind:'forest',weight:32,focus:12,terms:{pt:'floresta|bosque|árvores',en:'forest|woods|trees',es:'bosque|árboles'}},
  {id:'city',kind:'city',weight:32,focus:12,terms:{pt:'cidade|avenida|multidão',en:'city|avenue|crowd',es:'ciudad|avenida|multitud'}},

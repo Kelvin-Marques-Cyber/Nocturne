@@ -264,3 +264,9 @@ Colar ou editar a letra atualiza palavras, cenas e direção após uma breve pau
 ### Ritmo dos zooms
 
 Os close-ups automáticos deixam pelo menos seis segundos de palco livre entre os destaques. Frases comuns e canto suave não acionam zoom por si só. Gritos, crescendos claros, notas prolongadas com tempos confiáveis e algumas palavras de forte ênfase podem gerar aproximações curtas. Um timestamp estimado muito longo não mantém a tela presa na letra. Projetos salvos recebem esse planejamento uma vez ao carregar, preservando letra, tempos, cenas, estilo e interpretações escolhidas manualmente.
+
+## Biblioteca ampliada de cenas
+
+351 opções selecionáveis: as 31 cenas originais e 320 composições procedurais em 40 novas famílias. Abismo, vale, farol, casa, mesa, jardim, trem, cartas, fotografia, fogo, mãos e outros mundos possuem geometria própria, com composições de noite, chuva, névoa, fratura, luz, reflexo e retorno. Não são 320 clipes desenhados à mão. A busca em Ajustes encontra famílias e composições; os novos storyboards escolhem pelo vocabulário da letra em português, inglês e espanhol e alternam oito composições antes de repetir uma família. Projetos antigos e escolhas manuais são preservados.
+
+O boneco mantém gestos mais contidos, ombros melhor separados e cotovelos levemente flexionados; planos de descanso preservam a postura sentada. A política de zoom espaçado continua ativa.

@@ -3,9 +3,9 @@
 import type {Project,Scene,Point} from './model';
 import {n,rand,smooth} from './math';
 
-interface StageContext {p:Project;s:Scene;t:number;local:number;q:number;w:number;h:number;u:number;ground:number;beat:number;energy:number;accent:string;fg:string;}
-type Hero<C>=(c:C,x:number,y:number,scale?:number,ghost?:boolean,time?:number,contacts?:{left?:Point;right?:Point})=>string;
-type Words<C>=(c:C,text:string,x:number,y:number,size:number,progress:number)=>string;
+export interface StageContext {p:Project;s:Scene;t:number;local:number;q:number;w:number;h:number;u:number;ground:number;beat:number;energy:number;accent:string;fg:string;}
+export type Hero<C>=(c:C,x:number,y:number,scale?:number,ghost?:boolean,time?:number,contacts?:{left?:Point;right?:Point})=>string;
+export type Words<C>=(c:C,text:string,x:number,y:number,size:number,progress:number)=>string;
 const path=(d:string,color:string,opacity=.5,width=1)=>`<path d="${d}" fill="none" stroke="${color}" opacity="${n(opacity)}" stroke-width="${n(width)}" stroke-linecap="round" stroke-linejoin="round"/>`;
 
 // These are animated worlds, not alternate names for the same background.

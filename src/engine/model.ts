@@ -3,8 +3,9 @@
 import {lexical,languages,type Language} from './language';
 import {textureKinds,validPerformance,type Performance} from './catalog';
 import {deliveries,type Delivery} from './voice';
+import {newSceneKinds,scenePreset} from './scene-catalog';
 export const transitions=['cut','shutter','dissolve','ink','channel','iris','whip','burn','zoom','split','mosaic','filmstrip','ripple','raster','aperture','typewriter','crosszoom'] as const;
-export const kinds = ['constellation','heart','corridor','choice','echo','hide','soul','fall','denial','orbit','rest','terminal','ocean','door','lift','television','tunnel3d','mirror','storm','clock','bridge','forest','city','desert','staircase','cage','eclipse','prism','guitar','piano','drums'] as const;
+export const kinds = ['constellation','heart','corridor','choice','echo','hide','soul','fall','denial','orbit','rest','terminal','ocean','door','lift','television','tunnel3d','mirror','storm','clock','bridge','forest','city','desert','staircase','cage','eclipse','prism','guitar','piano','drums',...newSceneKinds] as const;
 export type SceneKind=typeof kinds[number];
 export const actions=['idle','walk','run','stumble','fall','kneel','rise','crawl','fear','hesitate','surprise','hold','push','drag','reach','rest','turn','brace','float','recoil'] as const;
 export type Action=typeof actions[number];
@@ -17,7 +18,7 @@ export interface Character {name:string;stroke:string;thickness:number;scale:num
 export interface Camera {zoomFrom:number;zoomTo:number;panX:number;panY:number;roll:number;shake:number;lyricFocus?:number;focusX?:number;focusY?:number}
 export interface SceneEvent {at:number;duration:number;type:'impact'|'freeze'|'glitch'|'flash'|'word'|'focus';strength:number;wordId?:string;focusMode?:'phrase'|'word';delivery?:Delivery;source?:'auto'|'manual'}
 export interface Motion {action:Action;start:number;end:number;weight?:number}
-export interface Scene {id:string;start:number;end:number;kind:SceneKind;title:string;intent:string;code:string;wordIds:string[];accent:string;variant:number;camera:Camera;motions:Motion[];events:SceneEvent[];transition:typeof transitions[number];performance?:Performance;meaning?:{language:Language;concepts:string[];keywords:string[]}}
+export interface Scene {id:string;start:number;end:number;kind:SceneKind;preset?:string;title:string;intent:string;code:string;wordIds:string[];accent:string;variant:number;camera:Camera;motions:Motion[];events:SceneEvent[];transition:typeof transitions[number];performance?:Performance;meaning?:{language:Language;concepts:string[];keywords:string[]}}
 export const filterTypes=textureKinds;
 export type FilterType=typeof filterTypes[number];
 export interface FilmFilter{id:string;type:FilterType;amount:number;enabled:boolean}
@@ -61,6 +62,7 @@ export function validateProject(value:unknown): asserts value is Project {
   if([s.title,s.intent,s.code,s.accent,s.id].some(v=>typeof v!=='string')||!transitions.includes(s.transition))throw Error(`Cena ${i+1}: texto ou transição inválidos.`);
   if(!s.camera||Object.values(s.camera).some(v=>!finite(v))||s.camera.zoomFrom<=0||s.camera.zoomTo<=0)throw Error('Câmera inválida.');
   if(s.performance!==undefined&&!validPerformance(s.performance))throw Error('Receita de direção inválida.');
+  if(s.preset!==undefined&&(typeof s.preset!=='string'||!scenePreset(s)))throw Error('Composição de cena inválida.');
   for(const v of [s.camera.focusX,s.camera.focusY])if(v!==undefined&&(v<0||v>1))throw Error('O ponto de interesse da câmera deve estar dentro do quadro.');
   if(s.camera.lyricFocus!==undefined&&(s.camera.lyricFocus<0||s.camera.lyricFocus>1))throw Error('O foco da letra deve estar entre zero e um.');
   for(const m of s.motions)if(!actions.includes(m.action)||!finite(m.start)||!finite(m.end)||m.end<=m.start)throw Error('Movimento inválido.');
