@@ -25,3 +25,10 @@ A licença Apache 2.0 em `LICENSE` cobre o código original do Nocturne. As depe
 O renderizador principal usa Sharp e FFmpeg; nenhuma assinatura ou serviço pago é necessário. Remotion tem critérios próprios de uso gratuito e licenciamento empresarial. Não é apresentado aqui como uma dependência integralmente Apache nem como uma licença de código aberto sem restrições.
 
 Gravações, letras e vídeos importados não passam a ser Apache 2.0 por serem usados no editor. O vídeo de referência foi analisado para direção; seus quadros, áudio e marcas não fazem parte dos arquivos públicos do projeto.
+
+| Componente | Uso | Licença / fonte |
+| --- | --- | --- |
+| ONNX Runtime Web 1.22.0 | Inferência acústica WASM no aparelho | MIT — https://github.com/microsoft/onnxruntime/tree/v1.22.0 |
+| Transformers.js 3.8.1 e Whisper Small | Conferência de palavras e transcrição multilíngue, baixadas no primeiro uso | Apache-2.0 / MIT — https://github.com/huggingface/transformers.js e https://github.com/openai/whisper |
+| franc-min 6.2.0 e dependências de trigramas | Idiomas candidatos a partir da letra | MIT — https://github.com/wooorm/franc |
+| MMS_FA (Meta Research) / conversão ONNX de xycld, revisão 06e6cbfa5c257d23981c922f6406f5def958eb95 | Modelo opcional de alinhamento acústico, baixado separadamente; não incluído no build | CC-BY-NC-4.0, uso não comercial — https://huggingface.co/xycld/lyric-align-mms-fa e https://github.com/facebookresearch/fairseq/tree/main/examples/mms; Pratap et al., Scaling Speech Technology to 1,000+ Languages (2023) |
