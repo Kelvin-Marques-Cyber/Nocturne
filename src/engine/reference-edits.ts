@@ -9,6 +9,7 @@ import {expressivePose} from './expression';
 import {projector} from './space3d';
 import {typeWidth,typographyFor} from './typography';
 import type {EditProfile} from './edit-presets';
+import {crabHUD} from './crab-hud';
 
 export interface EditContext {p:Project;s:Scene;t:number;local:number;q:number;w:number;h:number;u:number;beat:number;energy:number;accent:string;fg:string;words:Word[];}
 type V3=[number,number,number];
@@ -24,7 +25,8 @@ export function resolvedEditProfile(p:Project,s:Scene):Exclude<EditProfile,'auto
  if(i%4===0||['television','guitar','piano','drums','door'].includes(s.kind))return'classic';
  if(['ocean','abyss','valley','mountain','sunrise','eclipse','storm','snow','wind','desert','tunnel3d'].includes(s.kind))return'solar-drift';
  if(['rest','home','soul','hide','photograph','station','candle'].includes(s.kind))return'sketch-room';
- if(['heart','mirror','hands','roots','thread','constellation','prism','orbit'].includes(s.kind))return'wireframe-lab';
+ if(s.kind==='heart')return'crab-lab';
+ if(['mirror','hands','roots','thread','constellation','prism','orbit'].includes(s.kind))return'wireframe-lab';
  if(['denial','scales','clock','book','terminal'].includes(s.kind))return'type-archive';
  return'gallery-flight';
 }
@@ -173,6 +175,7 @@ function galleryFlight(c:EditContext,id:string){
 }
 export function renderReferenceEdit(c:EditContext):string|undefined{
  const profile=resolvedEditProfile(c.p,c.s);if(profile==='classic')return;
+ if(profile==='crab-lab')return crabHUD(c.p,c.s,c.t,c.w,c.h);
  const id='reference-'+c.p.scenes.indexOf(c.s),renderers={'sketch-room':sketchRoom,'wireframe-lab':wireframeLab,'solar-drift':solarDrift,'type-archive':typeArchive,'gallery-flight':galleryFlight};
  return`<g data-reference-edit="${profile}">${renderers[profile](c,id)}</g>`;
 }

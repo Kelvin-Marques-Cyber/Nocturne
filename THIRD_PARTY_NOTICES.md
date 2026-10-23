@@ -8,6 +8,8 @@ A licença Apache 2.0 em `LICENSE` cobre o código original do Nocturne. As depe
 | TypeScript | Tipagem e verificação | Apache-2.0 — https://github.com/microsoft/TypeScript |
 | Vite | Desenvolvimento e build do editor | MIT — https://github.com/vitejs/vite |
 | tsx | Execução local de TypeScript | MIT — https://github.com/privatenumber/tsx |
+| Three.js | Renderização 3D e materiais físicos; malha e animação do caranguejo são código original | MIT — `node_modules/three/LICENSE`; https://threejs.org/ |
+| Puppeteer Core | Captura local de cenas 3D em Chromium para FFmpeg | Apache-2.0 — https://github.com/puppeteer/puppeteer |
 | Sharp | Rasterização do mesmo SVG usado na prévia | Apache-2.0 — https://github.com/lovell/sharp |
 | libvips e bibliotecas nativas do Sharp | Rasterização e processamento de imagem | Licenças próprias; ver distribuição e https://www.libvips.org/ |
 | FFmpeg | Decodificação e exportação H.264/AAC | LGPL/GPL conforme a compilação; `ffmpeg -L` e https://ffmpeg.org/legal.html |

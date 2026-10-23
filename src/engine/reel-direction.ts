@@ -11,7 +11,7 @@ export type ReelLayout='cascade'|'desktop'|'dialog'|'world';
 export interface ReelWord {word:Word;x:number;y:number;z:number;size:number;width:number;}
 export interface ReelPhrase {words:Word[];start:number;end:number;delivery:VocalDelivery;nodes:ReelWord[];x:number;y:number;z:number;width:number;height:number;}
 export interface ReelShot {start:number;end:number;layout:ReelLayout;phrases:ReelPhrase[];type:Typography;camera:typeof cameraRecipes[number];bounds:{x:number;y:number;width:number;height:number;z:number};intensity:number;turnAt:number;sign:number;}
-export interface ReelCamera {x:number;y:number;distance:number;yaw:number;pitch:number;roll:number;focal:number;width:number;height:number;}
+export interface ReelCamera {x:number;y:number;distance:number;yaw:number;pitch:number;roll:number;focal:number;width:number;height:number;focus?:number;}
 const cache=new WeakMap<Scene,{signature:string;words:Word[];analysis:Project['analysis'];shots:ReelShot[]}>();
 
 function composition(s:Scene,phrases:Pick<ReelPhrase,'words'|'delivery'>[]):ReelLayout{
@@ -73,7 +73,9 @@ export function reelCamera(shot:ReelShot,t:number,w:number,h:number):ReelCamera{
  distance/=1+peak*.10*shot.intensity;
  const recipe=shot.camera,on=shot.intensity>0;
  distance/=1+recipe.depth*turn*.3;
- return{x:x+recipe.x*w*turn,y:y+recipe.y*h*turn,distance,yaw:on?shot.sign*(.025*shot.intensity+clamp(recipe.yaw*turn,-.14,.14)):0,pitch:on?-.016*shot.intensity+clamp(recipe.pitch*turn,-.08,.08):0,roll:on?clamp(recipe.roll*turn,-.035,.035):0,focal,width:w,height:h};
+ const focus=shot.layout==='cascade'&&phrase&&phrase.words.length>=3&&index%2===1?smooth((t-phrase.words.at(-1)!.start)/.2)*(1-smooth((t-phrase.end-.16)/.4)):0;
+ if(focus&&phrase){const left=Math.min(...phrase.nodes.map(n=>n.x)),right=Math.max(...phrase.nodes.map(n=>n.x+n.width)),fit=Math.min(w*.88/Math.max(1,right-left),h*.65/Math.max(1,phrase.height));distance=mix(distance,focal/fit+phrase.z,focus);x=mix(x,(left+right)/2,focus);y=mix(y,phrase.y,focus);}
+ return{x:x+recipe.x*w*turn*(1-focus),y:y+recipe.y*h*turn*(1-focus),distance,yaw:on?shot.sign*(.025*shot.intensity+clamp(recipe.yaw*turn,-.14,.14)+focus*.1):0,pitch:on?-.016*shot.intensity+clamp(recipe.pitch*turn,-.08,.08):0,roll:on?clamp(recipe.roll*turn+focus*shot.sign*.025,-.045,.045):0,focal,width:w,height:h,focus};
 }
 export function projectReelPoint(c:ReelCamera,point:[number,number,number]):Point{
  const dx=point[0]-c.x,dy=point[1]-c.y,dz=point[2],x=dx*Math.cos(c.yaw)+dz*Math.sin(c.yaw),z=-dx*Math.sin(c.yaw)+dz*Math.cos(c.yaw),y=dy*Math.cos(c.pitch)-z*Math.sin(c.pitch),zz=dy*Math.sin(c.pitch)+z*Math.cos(c.pitch),scale=c.focal/Math.max(c.focal*.22,c.distance-zz);

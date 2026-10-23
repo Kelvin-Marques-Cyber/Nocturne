@@ -81,6 +81,8 @@ npm run project -- \
 | `--` depois de `npm run project` | Encaminha os argumentos seguintes ao script. |
 | `--audio` | Arquivo sonoro original. É copiado para `public/media`. |
 | `--lyrics` | Letra autoritativa opcional; quando ausente/vazia, o áudio é transcrito automaticamente. |
+| `--style` | Paleta e filtros: `terminal-noir`, `chalk`, `signal`, `datamosh`, `acid-industrial` ou `emerald`. |
+| `--edit-profile` | Direção visual, por exemplo `auto`, `classic` ou `crab-lab`. |
 | `--model` | Modelo do ASR local automático: `tiny` (padrão rápido), `small` ou caminho local. |
 | `--title` / `--artist` | Título e autoria exibidos no filme. |
 | `--out` | Caminho do projeto JSON gerado. |
@@ -300,3 +302,17 @@ Para letras com escrita latina, o modo avançado **Alinhamento acústico** alinh
 O idioma automático é previsto pelo modelo, orientado pelos idiomas encontrados na letra quando ela é fornecida. Ele não depende do padrão inglês do Transformers.js 3.8.1. Tempos reconhecidos e ajustes manuais são preservados ao regerar. Sobreposição de vozes, palavras ausentes na gravação, rap e voz com muito efeito ainda exigem conferência; não há garantia de alinhamento perfeito para toda música. Deslocamento global corrige apenas atraso constante.
 
 Cenas com rótulos temáticos também mantêm a letra cantada visível, por tempo de palavra, acima dos filtros. Na exportação AAC por WASM, a compensação de 1024 amostras remove a latência inicial do encoder; o caminho AAC nativo permanece sem esse ajuste.
+
+
+## Objeto 3D articulado da referência
+
+Em **Ajustes → Estilos das referências**, selecione **Caranguejo 3D · referência** para a música ou uma cena. O caranguejo possui geometria 3D, carapaça com relevo procedural, materiais físicos, oito pernas com IK, pinças móveis e apoio no chão. A fase das batidas governa o ciclo da passada e o avanço; a câmera acompanha o deslocamento. A cena alterna superfície e malha e usa sinais reais do áudio nos gráficos. A malha atual é procedural e ainda tem acabamento mais sintético que o animal fotorrealista do vídeo de referência.
+
+A prévia, o exportador do navegador e o adaptador Remotion usam o mesmo módulo WebGL, calculado pelo tempo absoluto. O renderizador local usa Chromium somente nas cenas 3D e conserva Sharp/FFmpeg nas demais. A primeira execução local prepara o navegador; para usar um Chromium já instalado, defina `NOCTURNE_BROWSER` com o caminho do executável.
+
+```bash
+npm run project -- --audio "/caminho/musica.mp3" --title "Minha música" --style terminal-noir --edit-profile crab-lab --out projects/import-caranguejo.json
+npm run render -- --project projects/import-caranguejo.json --out output/caranguejo.mp4 --format horizontal --fps 30
+```
+
+O modo 3D exige WebGL2 no aparelho. A prévia limita o tamanho do monitor para responder melhor ao toque; a exportação continua nas dimensões escolhidas, incluindo 1080p. A velocidade do 3D depende da GPU; renderização por software no servidor pode ser mais lenta. Não há modelo, vídeo, áudio ou screenshot de referência redistribuído no projeto.

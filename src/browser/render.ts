@@ -8,6 +8,7 @@ import{renderFrame}from'../engine/frame';
 import{audioBlob,decodeAudio}from'../editor/platform';
 import{loadFilmFonts,outlineText}from'./fonts';
 import{FramePool}from'./frame-pool';
+import{hasReal3D,real3DScene}from'../engine/real3d-plan';
 export interface BrowserRenderOptions{from?:number;duration?:number;width?:number;height?:number;fps?:number;signal?:AbortSignal;onProgress?:(percent:number)=>void;onStats?:(stats:{fps:number;remaining:number;workers:number})=>void;}
 let fallbackAac:Promise<boolean>|undefined;
 export async function renderBrowserVideo(project:Project,options:BrowserRenderOptions={}):Promise<Blob>{
@@ -52,8 +53,10 @@ export async function renderBrowserVideo(project:Project,options:BrowserRenderOp
  }
  let removeAbort:(()=>void)|undefined;
  const prepared=new Map<number,Promise<PreparedFrame>>();
+ let scene3D:import('./real3d').Real3DRenderer|undefined;
  const startPrepare=(frame:number)=>{const result=prepareFrame(frame);void result.catch(()=>{});return result;};
  try{
+  if(hasReal3D(project)){const {Real3DRenderer}=await import('./real3d');scene3D=new Real3DRenderer(document.createElement('canvas'));}
   try{pool=new FramePool(parallel);await pool.init(project,true);}catch(error){pool?.close();pool=undefined;fonts=await loadFilmFonts(project.lyrics);}
   const abort=()=>pool?.close(Error('Renderização cancelada.'));
   options.signal?.addEventListener('abort',abort,{once:true});
@@ -65,7 +68,11 @@ export async function renderBrowserVideo(project:Project,options:BrowserRenderOp
    if(options.signal?.aborted)throw Error('Renderização cancelada.');
    const current=await prepared.get(frame)!;prepared.delete(frame);
    if(frame+parallel<total)prepared.set(frame+parallel,startPrepare(frame+parallel));
-   try{context.drawImage(current.source,0,0,w,h);}finally{current.dispose();}
+   try{
+    const t=Math.max(0,from+frame/fps-(project.visualSyncOffsetSeconds??0));
+    if(real3DScene(project,t)&&scene3D){scene3D.render(project,t,w,h);context.drawImage(scene3D.canvas,0,0,w,h);}
+    context.drawImage(current.source,0,0,w,h);
+   }finally{current.dispose();}
    await video.add(frame/fps,Math.min(1/fps,duration-frame/fps));
    if(frame%12===0||frame===total-1){options.onProgress?.((frame+1)/total*100);await new Promise<void>(r=>setTimeout(r,0));}
    if(frame%30===0||frame===total-1){const speed=(frame+1)/Math.max(.001,(performance.now()-started)/1000);options.onStats?.({fps:speed,remaining:(total-frame-1)/speed,workers:pool?parallel:0});}
@@ -76,5 +83,5 @@ export async function renderBrowserVideo(project:Project,options:BrowserRenderOp
   pool?.close();
   for(const promise of prepared.values())try{(await promise).dispose();}catch{}
   await output.cancel();throw error;
- }finally{removeAbort?.();pool?.close();}
+ }finally{removeAbort?.();pool?.close();scene3D?.dispose();}
 }

@@ -10,6 +10,8 @@ import {mkdir,rename,rm,readFile} from 'node:fs/promises';
 import type {Project} from '../src/engine/model';
 import {dimensions,validateProject} from '../src/engine/model';
 import {renderFrame} from '../src/engine/frame';
+import {hasReal3D,real3DScene} from '../src/engine/real3d-plan';
+import sharp from 'sharp';
 export interface RenderOptions {from?:number;duration?:number;output:string;width?:number;height?:number;crf?:number;preset?:string;onProgress?:(value:{frame:number;total:number;percent:number;elapsed:number})=>void;signal?:AbortSignal;}
 const positive=(x:number)=>Number.isFinite(x)&&x>0;
 export async function renderVideo(project:Project,opts:RenderOptions){
@@ -31,14 +33,17 @@ export async function renderVideo(project:Project,opts:RenderOptions){
  ffmpeg.stdin.on('error',()=>{});
  const abort=()=>ffmpeg.kill('SIGTERM');opts.signal?.addEventListener('abort',abort,{once:true});
  const start=Date.now();
+ let scene3D:Awaited<ReturnType<typeof import('./real3d-native').native3DRenderer>>|undefined;
  try{
+  if(hasReal3D(project)){const {native3DRenderer}=await import('./real3d-native');scene3D=await native3DRenderer(project,ww,hh);}
   const concurrency=Math.max(2,Math.min(6,availableParallelism(),Math.floor(96*1024*1024/(ww*hh*3))));
   const pending=new Map<number,ReturnType<typeof rasterizeRGB>>();
-  const enqueue=(i:number)=>{if(i<total){const promise=rasterizeRGB(renderFrame(project,from*project.fps+i,{width:ww,height:hh}));promise.catch(()=>{});pending.set(i,promise);}};
+  const enqueue=(i:number)=>{if(i<total){const at=from*project.fps+i;if(scene3D&&real3DScene(project,Math.max(0,at/project.fps-(project.visualSyncOffsetSeconds??0))))return;const promise=rasterizeRGB(renderFrame(project,at,{width:ww,height:hh}));promise.catch(()=>{});pending.set(i,promise);}};
   for(let i=0;i<Math.min(concurrency,total);i++)enqueue(i);
   for(let i=0;i<total;i++){
    if(opts.signal?.aborted)throw Error('Renderização cancelada.');if(spawnError)throw spawnError;if(ffmpeg.exitCode!==null)throw Error(stderr||'FFmpeg encerrou antes do último frame.');
-   const frame=await pending.get(i)!;pending.delete(i);enqueue(i+concurrency);
+   const at=from*project.fps+i,is3D=scene3D&&real3DScene(project,Math.max(0,at/project.fps-(project.visualSyncOffsetSeconds??0)));
+   const frame=is3D?await sharp(await scene3D!.frame(at)).removeAlpha().raw().toBuffer():await pending.get(i)!;pending.delete(i);enqueue(i+concurrency);
    if(!ffmpeg.stdin.write(frame))await once(ffmpeg.stdin,'drain');
    if(i%project.fps===0||i===total-1)opts.onProgress?.({frame:i+1,total,percent:(i+1)/total*100,elapsed:(Date.now()-start)/1000});
   }
@@ -46,5 +51,5 @@ export async function renderVideo(project:Project,opts:RenderOptions){
   await rename(temp,out);
   const metadata=JSON.parse(execFileSync(process.env.FFPROBE??'ffprobe',['-v','quiet','-of','json','-show_streams',out],{encoding:'utf8'})),encoded=metadata.streams.find((s:{codec_type:string})=>s.codec_type==='video');
   return {output:out,frames:Number(encoded.nb_frames),inputFrames:total,duration,width:ww,height:hh,fps:project.fps,elapsed:(Date.now()-start)/1000};
- }catch(e){ffmpeg.kill('SIGTERM');await completion;await rm(temp,{force:true});throw e;}finally{opts.signal?.removeEventListener('abort',abort);}
+ }catch(e){ffmpeg.kill('SIGTERM');await completion;await rm(temp,{force:true});throw e;}finally{opts.signal?.removeEventListener('abort',abort);await scene3D?.close();}
 }

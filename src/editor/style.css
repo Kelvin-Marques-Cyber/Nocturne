@@ -130,3 +130,5 @@
 .swatch-gallery-flight{background:repeating-linear-gradient(105deg,#23384b 0 20px,#11131b 21px 26px,#432d3c 27px 48px,#11131b 49px 54px)}
 .reference-panel .field{margin-top:15px}.reference-panel .note b{color:#e5dcd9}
 @media(max-width:760px){.reference-presets{gap:10px}.reference-presets button{font-size:13px;padding:10px}.reference-swatch{height:66px}}
+
+.swatch-crab-lab{background:radial-gradient(ellipse at 50% 45%,#9d6444 0 16%,transparent 18%),repeating-conic-gradient(from 15deg at 50% 50%,transparent 0deg 30deg,#967154 32deg 34deg,transparent 36deg 60deg),linear-gradient(#20292c,#596364)}

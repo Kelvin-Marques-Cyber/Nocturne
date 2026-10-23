@@ -18,3 +18,5 @@ public/NotoSansCJKjp-Regular.otf
 
 # Private recording and its transcript stay on this device.
 projects/pobre-alma*
+
+.cache/

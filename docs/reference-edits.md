@@ -9,7 +9,7 @@ Os vídeos enviados são referências de direção. Nenhum trecho, screenshot, m
 | 43318 · paisagem e passagem de luz | Horizonte como destino, diferentes velocidades de planos e impactos luminosos que mudam a escala. | Travessia solar: três planos de terreno, perspectiva de vale, horizonte luminoso e ondas acionadas pelos impactos identificados. |
 | 43319 · montagem de interfaces | Palavras desenham o espaço; título central; passagem entre painéis em profundidade. | Arquivo tipográfico e Galeria em profundidade: arquivo das palavras já cantadas, plano frontal da frase e painéis vetoriais com projeção em perspectiva. |
 
-As imagens fotorrealistas das referências não são reproduzidas pelo renderizador vetorial. Os estilos acima usam geometria procedural, personagens articulados e os dados da música. A linguagem do primeiro reel continua disponível em **Reel original**.
+A referência do caranguejo passa a ter uma cena WebGL própria (`crab-lab`): animal em volume, materiais físicos, articulação das oito pernas e das pinças, câmera próxima, chão com sombra, alternância para malha e instrumentação sonora nas bordas. A malha atual é procedural; o acabamento ainda é mais sintético que o modelo fotorrealista observado. Os demais estilos acima continuam procedurais e não devem ser apresentados como reprodução já concluída das imagens fotorrealistas. A linguagem do primeiro reel continua disponível em **Reel original**.
 
 ## Escolha e combinação
 
@@ -23,4 +23,9 @@ Projetos existentes continuam válidos. A adoção no editor não refaz o ASR, n
 
 Quatro novas transições: `exposure` (segunda exposição deslocada), `portal` (abertura elíptica de luz), `parallax` (passagem de planos em escalas diferentes) e `light-sweep` (varredura diagonal).
 
-O mesmo SVG determinístico serve à prévia, ao exportador WebCodecs e ao FFmpeg. As novas cenas não exigem assets externos, serviço pago, fontes novas ou dependências adicionais. Grades, faces e painéis têm contagem limitada, sem árvores infinitas de partículas ou desfoques em tela inteira.
+Nas cenas vetoriais, o mesmo SVG determinístico serve à prévia, ao exportador WebCodecs e ao FFmpeg. Nas cenas `crab-lab`, o mesmo módulo WebGL serve à prévia, ao navegador, ao Remotion e à captura local por Chromium; o SVG compõe a tipografia e a instrumentação sobre o animal. As novas cenas não exigem assets externos, serviço pago, fontes novas ou dependências adicionais. Grades, faces e painéis têm contagem limitada, sem árvores infinitas de partículas ou desfoques em tela inteira.
+
+
+## Reanálise do trecho do caranguejo
+
+Os frames de 18 s e 21 s, corrigidos da rotação de apresentação, mostram duas fases distintas: a estrutura de articulações e o animal com textura, reflexos e sombra. A sensação de realidade vem da anatomia, superfície e contato das patas com o plano, além da câmera em perspectiva. A malha de uma pessoa em um cenário técnico não reproduzia esse motivo visual. A nova cena separa corpo, membros articulados, iluminação, câmera e HUD. O código calcula a pose pelo tempo musical, sem integrar estado entre frames, para permitir seek e renderização em ordem arbitrária.
