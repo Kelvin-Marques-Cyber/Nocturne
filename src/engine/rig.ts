@@ -104,11 +104,13 @@ export function characterSVG(p:Pose,c:Character,accent:string,heartPulse:number,
  for(const [foot,sign]of [[rig.leftLeg[1],-1],[rig.rightLeg[1],1]]as const)paths.push(path(`M${pt(foot)} q${n(6+sign)} 1 10 0`,sign<0?.57:1));
  const rx=anatomy.headX*c.head,ry=anatomy.headY*c.head,bottom:Point=[p.head[0],p.head[1]+ry];
  const neck=path(`M${pt(p.neck)} Q${n(mix(p.neck[0],bottom[0],.6))} ${n(mix(p.neck[1],bottom[1],.5))} ${pt(bottom)}`);
- const head=`<g transform="rotate(${n(p.tilt*.7)} ${pt(p.head)})"><ellipse cx="${n(p.head[0])}" cy="${n(p.head[1])}" rx="${n(rx)}" ry="${n(ry)}" fill="${ghost?'none':'#08090b'}"/></g>`;
+ const ink=c.design==='ink',radius=20*c.head;
+ const head=ink?`<g transform="translate(${pt(p.head)}) rotate(${n(p.tilt)})"><path d="M${n(radius)} 0 C${n(radius+1)} ${n(radius*.6)} ${n(radius*.5)} ${n(radius+1)} 0 ${n(radius)} S${n(-radius-1)} ${n(radius*.5)} ${n(-radius)} 0 S${n(-radius*.55)} ${n(-radius-1)} 0 ${n(-radius)} S${n(radius-1)} ${n(-radius*.55)} ${n(radius)} 0Z" fill="${ghost?'none':'#08090b'}"/></g>`:`<g transform="rotate(${n(p.tilt*.7)} ${pt(p.head)})"><ellipse cx="${n(p.head[0])}" cy="${n(p.head[1])}" rx="${n(rx)}" ry="${n(ry)}" fill="${ghost?'none':'#08090b'}"/></g>`;
  const a=p.rotation*Math.PI/180;
  const points=[...rig.leftArm,...rig.rightArm,...rig.leftLeg,...rig.rightLeg,p.hip,p.neck];
  const maxY=Math.max(0,...points.map(([x,y])=>x*Math.sin(a)+y*p.squash*Math.cos(a)),p.head[0]*Math.sin(a)+p.head[1]*p.squash*Math.cos(a)+Math.hypot(rx*Math.sin(a),ry*Math.cos(a)));
  const ground=-maxY;
  const heart:Point=[mix(p.hip[0],p.neck[0],.69),mix(p.hip[1],p.neck[1],.69)];
- return `<g data-character="articulated" opacity="${opacity}" transform="translate(0 ${n(ground)}) rotate(${n(p.rotation)}) scale(1 ${n(p.squash)})"><g fill="none" stroke="${esc(c.stroke)}" stroke-width="${n(s)}" stroke-linecap="round" stroke-linejoin="round">${paths.join('')}${neck}${head}</g>${c.heart&&!ghost?`<circle cx="${n(heart[0])}" cy="${n(heart[1])}" r="${n(3.7+heartPulse*1.3)}" fill="${accent}"/><circle cx="${n(heart[0])}" cy="${n(heart[1])}" r="${n(8+heartPulse*5)}" stroke="${accent}" stroke-width=".8" fill="none" opacity=".27"/>`:''}</g>`;
+ const strokes=ink?[path(limb(p.hip,...rig.leftLeg),.78),path(limb(p.hip,...rig.rightLeg)),path(`M${pt(p.hip)}Q${n(p.neck[0]+3)} ${n(p.hip[1]-40)} ${pt(p.neck)}`),path(limb([p.neck[0],p.neck[1]+8],...rig.leftArm),.85),path(limb([p.neck[0],p.neck[1]+8],...rig.rightArm))].join(''):paths.join('');
+ return `<g data-character="${ink?'ink':'articulated'}" opacity="${opacity}" transform="translate(0 ${n(ground)}) rotate(${n(p.rotation)}) scale(1 ${n(p.squash)})"><g fill="none" stroke="${esc(c.stroke)}" stroke-width="${n(s)}" stroke-linecap="round" stroke-linejoin="round">${strokes}${neck}${head}</g>${c.heart&&!ghost?`<circle cx="${n(heart[0])}" cy="${n(heart[1])}" r="${n(3.7+heartPulse*1.3)}" fill="${accent}"/><circle cx="${n(heart[0])}" cy="${n(heart[1])}" r="${n(8+heartPulse*5)}" stroke="${accent}" stroke-width=".8" fill="none" opacity=".27"/>`:''}</g>`;
 }

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Kelvin e Silva Marques
 import {ensureProjectFonts} from './font-support';
-import {rasterize} from '../src/engine/raster';
+import {rasterizeRGB} from '../src/engine/raster';
+import {availableParallelism} from 'node:os';
 import {spawn,execFileSync} from 'node:child_process';
 import {once} from 'node:events';
 import {resolve,join} from 'node:path';
@@ -21,7 +22,8 @@ export async function renderVideo(project:Project,opts:RenderOptions){
  const audio=resolve('public',project.audio);await readFile(audio);
  const total=Math.ceil(duration*project.fps),out=resolve(opts.output),temp=out.replace(/\.mp4$/i,'')+'.rendering.mp4';
  await mkdir(resolve(out,'..'),{recursive:true});
- const ffmpeg=spawn(process.env.FFMPEG??'ffmpeg',['-hide_banner','-loglevel','error','-y','-f','image2pipe','-framerate',String(project.fps),'-i','pipe:0','-ss',String(from),'-i',audio,'-map','0:v:0','-map','1:a:0','-c:v','libx264','-preset',opts.preset??'fast','-crf',String(opts.crf??19),'-pix_fmt','yuv420p','-threads','2','-c:a','aac','-b:a','192k','-ar','48000','-t',String(duration),'-movflags','+faststart',temp],{stdio:['pipe','ignore','pipe']});
+ const threads=Math.max(1,Math.min(4,availableParallelism()-1));
+ const ffmpeg=spawn(process.env.FFMPEG??'ffmpeg',['-hide_banner','-loglevel','error','-y','-f','rawvideo','-pixel_format','rgb24','-video_size',`${ww}x${hh}`,'-framerate',String(project.fps),'-i','pipe:0','-ss',String(from),'-i',audio,'-map','0:v:0','-map','1:a:0','-c:v','libx264','-preset',opts.preset??'veryfast','-crf',String(opts.crf??19),'-pix_fmt','yuv420p','-threads',String(threads),'-c:a','aac','-b:a','192k','-ar','48000','-t',String(duration),'-movflags','+faststart',temp],{stdio:['pipe','ignore','pipe']});
  let stderr='';ffmpeg.stderr.on('data',d=>{stderr=(stderr+d).slice(-8000);});
  let spawnError:Error|undefined;ffmpeg.on('error',e=>{spawnError=e;});
  // Install exit handlers immediately: errors must not become unhandled rejections while frames are being generated.
@@ -30,9 +32,9 @@ export async function renderVideo(project:Project,opts:RenderOptions){
  const abort=()=>ffmpeg.kill('SIGTERM');opts.signal?.addEventListener('abort',abort,{once:true});
  const start=Date.now();
  try{
-  const concurrency=4;
-  const pending=new Map<number,ReturnType<typeof rasterize>>();
-  const enqueue=(i:number)=>{if(i<total){const promise=rasterize(renderFrame(project,from*project.fps+i,{width:ww,height:hh}));promise.catch(()=>{});pending.set(i,promise);}};
+  const concurrency=Math.max(2,Math.min(6,availableParallelism(),Math.floor(96*1024*1024/(ww*hh*3))));
+  const pending=new Map<number,ReturnType<typeof rasterizeRGB>>();
+  const enqueue=(i:number)=>{if(i<total){const promise=rasterizeRGB(renderFrame(project,from*project.fps+i,{width:ww,height:hh}));promise.catch(()=>{});pending.set(i,promise);}};
   for(let i=0;i<Math.min(concurrency,total);i++)enqueue(i);
   for(let i=0;i<total;i++){
    if(opts.signal?.aborted)throw Error('Renderização cancelada.');if(spawnError)throw spawnError;if(ffmpeg.exitCode!==null)throw Error(stderr||'FFmpeg encerrou antes do último frame.');

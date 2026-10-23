@@ -6,3 +6,6 @@ import{resolve}from'node:path';
 process.env.FONTCONFIG_FILE??=resolve('fonts/fonts.conf');
 sharp.concurrency(1);
 export function rasterize(svg:string){return sharp(Buffer.from(svg)).removeAlpha().png({compressionLevel:2,adaptiveFiltering:false}).toBuffer();}
+// Film export streams raw pixels. PNG compression and decoding belong only to
+// still-image delivery, not to every intermediate frame of an H.264 movie.
+export function rasterizeRGB(svg:string){return sharp(Buffer.from(svg)).removeAlpha().toColourspace('srgb').raw().toBuffer();}

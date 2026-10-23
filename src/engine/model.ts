@@ -14,7 +14,7 @@ export interface Word {id:string; text:string;start:number;end:number;line:numbe
 export interface VocalRegion {start:number;end:number;confidence:number}
 export interface VoiceAnalysis {source:'mix'|'isolated';method:string;energy:number[];presence:number[];pitch:number[];confidence:number[]}
 export interface Analysis {duration:number;sampleRate:number;hopSeconds:number;bpm:number;tempoConfidence:number;beats:number[];onsets:number[];impacts:number[];energy:number[];low:number[];high:number[];voice?:VoiceAnalysis;silences:{start:number;end:number}[];vocalRegions:VocalRegion[];sections:{start:number;end:number;energy:number}[];method:string;warnings:string[]}
-export interface Character {name:string;stroke:string;thickness:number;scale:number;head:number;heart:boolean}
+export interface Character {name:string;stroke:string;thickness:number;scale:number;head:number;heart:boolean;design?:'ink'|'articulated'}
 export interface Camera {zoomFrom:number;zoomTo:number;panX:number;panY:number;roll:number;shake:number;lyricFocus?:number;focusX?:number;focusY?:number}
 export interface SceneEvent {at:number;duration:number;type:'impact'|'freeze'|'glitch'|'flash'|'word'|'focus';strength:number;wordId?:string;focusMode?:'phrase'|'word';delivery?:Delivery;source?:'auto'|'manual'}
 export interface Motion {action:Action;start:number;end:number;weight?:number}
@@ -23,7 +23,7 @@ export const filterTypes=textureKinds;
 export type FilterType=typeof filterTypes[number];
 export interface FilmFilter{id:string;type:FilterType;amount:number;enabled:boolean}
 export interface Style {name:'terminal-noir'|'chalk'|'signal'|'datamosh'|'acid-industrial'|'emerald';filters?:FilmFilter[];background:string;foreground:string;accent:string;grain:number;glitch:number;chromatic:number;vhs:number;captions:boolean}
-export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;lyricFocusPolicy?:'balanced-v1';seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
+export interface Project {schemaVersion:1;id:string;title:string;artist:string;language?:Language;direction?:'reel'|'worlds';lyricFocusPolicy?:'balanced-v1';seed:number;duration:number;audio:string;lyrics:string;fps:30|60;format:'vertical'|'horizontal';analysis:Analysis;words:Word[];scenes:Scene[];character:Character;style:Style;alignment:{method:string;coverage:number;reviewRequired:boolean;notes:string[]}}
 const fx=(type:FilterType,amount:number):FilmFilter=>({id:type,type,amount,enabled:true});
 export const styles:Record<Style['name'],Style>={
  'terminal-noir':{name:'terminal-noir',background:'#08090b',foreground:'#e9e5dc',accent:'#ed3e43',grain:.22,glitch:.28,chromatic:.35,vhs:.16,captions:true},
@@ -44,6 +44,8 @@ export function validateProject(value:unknown): asserts value is Project {
  const p=value as Project;
  if(!p||p.schemaVersion!==1||!Array.isArray(p.scenes)||!p.scenes.length||!Array.isArray(p.words)||typeof p.audio!=='string'||typeof p.lyrics!=='string')throw Error('Projeto JSON inválido (schemaVersion = 1).');
  if(!finite(p.duration)||p.duration<=0||p.duration>7200||![30,60].includes(p.fps)||!['vertical','horizontal'].includes(p.format))throw Error('Duração, formato ou FPS inválidos.');
+ if(p.direction!==undefined&&!['reel','worlds'].includes(p.direction))throw Error('Direção inválida.');
+ if(p.character?.design!==undefined&&!['ink','articulated'].includes(p.character.design))throw Error('Desenho inválido.');
  if(p.language!==undefined&&!Object.hasOwn(languages,p.language))throw Error('Idioma inválido.');
  if(p.lyricFocusPolicy!==undefined&&p.lyricFocusPolicy!=='balanced-v1')throw Error('Política de zoom inválida.');
  if(!p.analysis||!Array.isArray(p.analysis.beats)||!Array.isArray(p.analysis.energy)||!finite(p.analysis.hopSeconds)||p.analysis.hopSeconds<=0)throw Error('Análise de áudio inválida.');

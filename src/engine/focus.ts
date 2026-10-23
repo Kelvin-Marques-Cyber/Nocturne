@@ -38,7 +38,7 @@ export function planLyricFocus(scenes:Scene[],words:Word[],language:Language='au
   const candidates=ws.map(w=>{
    const key=normalize(w.text),line=phraseFor(s,words,w),alone=line.length===1,meaning=analyzeMeaning(w.text,language),negative=meaning.hits.some(h=>h.concept==='refusal');
    const score=negative?(alone?100:0):Math.max(emphasis[key]??0,wordEmphasis(w.text,language));
-   const mode=alone||key==='constelacoes'||meaning.kind==='rest'||meaning.kind==='corridor'?'word' as const:'phrase' as const,anchor=analysis&&mode==='phrase'?line[0]:w;
+   const mode=alone?'word' as const:'phrase' as const,anchor=analysis&&mode==='phrase'?line[0]:w;
    const event:SceneEvent={at:anchor.start,duration:mode==='word'?1.4:Math.min(2.6,(line.at(-1)?.end??anchor.end)-anchor.start+.3),type:'focus',strength:1,wordId:anchor.id,focusMode:mode,source:'auto'};
    return{w:anchor,score,event,vocal:false,window:windowFor(s,words,anchor,event)};
   });
@@ -86,7 +86,8 @@ export function focusLayout(cue:LyricFocus,w:number,h:number,type:Typography=typ
 }
 export function phraseProjection(p:Project,s:Scene,t:number,w:number,h:number,cue:LyricFocus){
  const recipe=cameraRecipes.find(c=>c.id===s.performance?.camera)??cameraRecipes[3],rhythm=rhythmRecipes.find(r=>r.id===s.performance?.rhythm)??rhythmRecipes[0],type=typographyFor(s.performance?.typography),layout=focusLayout(cue,w,h,type);
- const enabled=s.performance?.enabled??true,intensity=enabled?(s.performance?.intensity??.7):0,age=t-cue.start,rotate=smooth((age-rhythm.delay)/.6)*cue.amount;
+ const enabled=s.performance?.enabled??true,intensity=enabled?(s.performance?.intensity??.7):0,age=t-cue.start,turnAt=p.analysis.beats.find(beat=>beat>cue.start+rhythm.delay&&beat<cue.start+rhythm.delay+.4)??cue.start+rhythm.delay,
+ rotate=(smooth((t-turnAt)/.16)*1.12-smooth((t-turnAt-.2)/.5)*.12)*cue.amount;
  const delivery=cue.delivery,burst=delivery.kind==='shout'?Math.exp(-Math.max(0,t-delivery.peakAt)*7)*smooth(Math.max(0,t-delivery.peakAt)/.035):0;
  const yaw=recipe.yaw*rotate*intensity,pitch=recipe.pitch*rotate*intensity,roll=recipe.roll*rotate*intensity,level=voiceLevel(p.analysis,t);
  const beat=enabled?beatResponse(p.analysis,t)*(s.performance?.beatSync??.65):0;
@@ -107,12 +108,12 @@ export function phraseProjection(p:Project,s:Scene,t:number,w:number,h:number,cu
 }
 export function renderLyricFocus(p:Project,s:Scene,t:number,w:number,h:number,cue:LyricFocus){
  const u=Math.min(w,h)/1080,a=cue.amount,travel=easeOut(a),projection=phraseProjection(p,s,t,w,h,cue),{layout,type,project}=projection,words=cue.words;
- const charCount=words.reduce((sum,w)=>sum+textWidth(w.text)+.61,0),small=Math.min(34*u,w*.8/(charCount)),total=charCount*small*.61;
+ const charCount=words.reduce((sum,w)=>sum+textWidth(w.text)+.61,0),small=Math.min(34*u,w*.8/(charCount)),total=charCount*small;
  let cursor=(w-total)/2;
  const active=words.find(w=>t>=w.start&&t<w.end)??cue.anchor;
  let out=`<g data-lyric-focus="${esc(cue.anchor.id)}" data-focus-amount="${n(a)}" data-delivery="${cue.delivery.kind}" data-phrase-3d="${n(projection.yaw)} ${n(projection.pitch)}" aria-label="${esc(words.map(w=>w.text).join(' '))}" opacity="${n(smooth(a/.28))}">`;
  for(const item of layout){
-  const{x,y,size,word}=item,startX=cursor,startY=h*.834;
+  const{x,y,size,word}=item,startX=cursor,startY=h*(p.direction==='reel'?.4:.834);
   cursor+=(textWidth(word.text)+.61)*small;
   const sizeNow=mix(small,size,travel),target=project(x,y),dx=project(x+1,y),dy=project(x,y+1),xx=mix(startX,target[0],travel),yy=mix(startY,target[1],travel),isActive=word.id===active.id;
   const held=isActive&&(s.performance?.enabled??true)?wordSustain(p.analysis,word,t,cue.event.delivery)*(s.performance?.intensity??.7):0;

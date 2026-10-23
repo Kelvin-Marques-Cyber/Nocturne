@@ -17679,12 +17679,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -17739,24 +17741,27 @@
           "strength": 0.32
         },
         {
-          "at": 5.44,
+          "at": 4.2,
           "duration": 2.6,
           "type": "focus",
           "strength": 1,
-          "wordId": "w4",
-          "focusMode": "phrase"
+          "wordId": "w2",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "dissolve",
       "performance": {
         "enabled": true,
-        "camera": "pendulum-2",
-        "typography": "mono-italic-0",
+        "camera": "snap-0",
+        "typography": "mono-bold-1",
         "gesture": "point-3",
-        "texture": "monochrome-1",
+        "texture": "clean",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "pulse"
       }
     },
     {
@@ -17789,13 +17794,13 @@
       "variant": 1,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.5,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.58,
-        "focusY": 0.6,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -17817,26 +17822,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 9.64,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w9",
-          "focusMode": "word"
         }
       ],
       "transition": "ripple",
       "performance": {
         "enabled": true,
-        "camera": "pendulum-1",
-        "typography": "sans-2",
+        "camera": "recoil-1",
+        "typography": "mono-italic-0",
         "gesture": "point-3",
-        "texture": "chromatic-0",
+        "texture": "scanlines-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "ripple"
       }
     },
     {
@@ -17873,13 +17872,13 @@
       "variant": 1,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.09,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.58,
-        "focusY": 0.6,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -17915,26 +17914,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 12.56,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w12",
-          "focusMode": "phrase"
         }
       ],
       "transition": "channel",
       "performance": {
         "enabled": true,
-        "camera": "rack-2",
-        "typography": "mono-2",
+        "camera": "portrait-1",
+        "typography": "mono-1",
         "gesture": "protect-0",
-        "texture": "datamosh-1",
+        "texture": "softfocus-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rays"
       }
     },
     {
@@ -17963,13 +17956,15 @@
       "accent": "VONTADE",
       "variant": 0,
       "camera": {
-        "zoomFrom": 1.05,
-        "zoomTo": 1,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -17996,13 +17991,15 @@
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "recoil-0",
-        "typography": "sans-1",
+        "camera": "rack-2",
+        "typography": "mono-italic-0",
         "gesture": "explain-1",
-        "texture": "monochrome-2",
+        "texture": "clean",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "bars"
       }
     },
     {
@@ -18034,12 +18031,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -18055,26 +18054,20 @@
           "type": "impact",
           "strength": 0.5,
           "wordId": "w23"
-        },
-        {
-          "at": 20.84,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w23",
-          "focusMode": "phrase"
         }
       ],
       "transition": "typewriter",
       "performance": {
         "enabled": true,
-        "camera": "hinge-2",
-        "typography": "sans-0",
+        "camera": "depth-2",
+        "typography": "mono-bold-2",
         "gesture": "explain-3",
-        "texture": "scanlines-0",
+        "texture": "dust-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "diamonds"
       }
     },
     {
@@ -18116,12 +18109,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -18159,24 +18154,27 @@
           "strength": 0.32
         },
         {
-          "at": 24.24,
-          "duration": 1.4,
+          "at": 23.34,
+          "duration": 2.0600000000000014,
           "type": "focus",
           "strength": 1,
-          "wordId": "w29",
-          "focusMode": "word"
+          "wordId": "w27",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "tilt-1",
-        "typography": "mono-bold-1",
+        "camera": "crane-0",
+        "typography": "mono-2",
         "gesture": "question-2",
-        "texture": "chromatic-0",
+        "texture": "scanlines-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "waveform"
       }
     },
     {
@@ -18209,13 +18207,13 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 2.1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.63,
-        "focusY": 0.63,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -18231,26 +18229,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 31.8,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w41",
-          "focusMode": "phrase"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "crane-0",
-        "typography": "mono-bold-2",
+        "camera": "sweep-0",
+        "typography": "mono-bold-0",
         "gesture": "explain-0",
-        "texture": "scanlines-2",
+        "texture": "dust-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "brackets"
       }
     },
     {
@@ -18283,13 +18275,13 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.09,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.63,
-        "focusY": 0.63,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -18306,26 +18298,20 @@
           "type": "impact",
           "strength": 0.5,
           "wordId": "w47"
-        },
-        {
-          "at": 35.74,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w47",
-          "focusMode": "phrase"
         }
       ],
       "transition": "channel",
       "performance": {
         "enabled": true,
-        "camera": "orbit-2",
+        "camera": "tilt-1",
         "typography": "mono-0",
         "gesture": "listen-0",
-        "texture": "vignette-2",
+        "texture": "clean",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rings"
       }
     },
     {
@@ -18361,13 +18347,13 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.7,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.45,
-        "focusY": 0.63,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -18407,26 +18393,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 42.04,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w57",
-          "focusMode": "phrase"
         }
       ],
       "transition": "split",
       "performance": {
         "enabled": true,
-        "camera": "crane-0",
-        "typography": "mono-2",
+        "camera": "sweep-1",
+        "typography": "mono-1",
         "gesture": "explain-1",
-        "texture": "datamosh-2",
+        "texture": "softfocus-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "pulse"
       }
     },
     {
@@ -18468,13 +18448,13 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 2.1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.42,
-        "focusY": 0.63,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -18504,26 +18484,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 48.48,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w69",
-          "focusMode": "phrase"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
         "camera": "dolly-1",
-        "typography": "mono-italic-2",
+        "typography": "mono-bold-1",
         "gesture": "protect-1",
-        "texture": "datamosh-0",
+        "texture": "dust-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "ripple"
       }
     },
     {
@@ -18561,13 +18535,15 @@
       "accent": "TÃO PEQUENO",
       "variant": 2,
       "camera": {
-        "zoomFrom": 1.12,
-        "zoomTo": 0.86,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -18598,24 +18574,27 @@
           "strength": 0.32
         },
         {
-          "at": 56.24,
+          "at": 55.32,
           "duration": 2.6,
           "type": "focus",
           "strength": 1,
-          "wordId": "w74",
-          "focusMode": "phrase"
+          "wordId": "w72",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "iris",
       "performance": {
         "enabled": true,
-        "camera": "crane-2",
-        "typography": "mono-1",
+        "camera": "hinge-0",
+        "typography": "mono-0",
         "gesture": "point-0",
-        "texture": "bloom-0",
+        "texture": "scanlines-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rays"
       }
     },
     {
@@ -18648,12 +18627,14 @@
       "variant": 3,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -18668,26 +18649,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 60.52,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w79",
-          "focusMode": "word"
         }
       ],
       "transition": "iris",
       "performance": {
         "enabled": true,
-        "camera": "dolly-0",
-        "typography": "mono-bold-2",
+        "camera": "dolly-1",
+        "typography": "mono-2",
         "gesture": "point-2",
-        "texture": "duotone-2",
+        "texture": "chromatic-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "bars"
       }
     },
     {
@@ -18724,12 +18699,14 @@
       "variant": 3,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.09,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -18758,26 +18735,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 64.64,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w85",
-          "focusMode": "phrase"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "tilt-2",
-        "typography": "mono-1",
+        "camera": "crane-2",
+        "typography": "mono-0",
         "gesture": "protect-2",
-        "texture": "chromatic-0",
+        "texture": "scanlines-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "diamonds"
       }
     },
     {
@@ -18806,13 +18777,15 @@
       "accent": "VONTADE",
       "variant": 1,
       "camera": {
-        "zoomFrom": 1.05,
-        "zoomTo": 1,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -18839,13 +18812,15 @@
       "transition": "channel",
       "performance": {
         "enabled": true,
-        "camera": "rack-0",
-        "typography": "mono-bold-1",
+        "camera": "spiral-1",
+        "typography": "mono-2",
         "gesture": "explain-0",
-        "texture": "contrast-1",
+        "texture": "chromatic-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "waveform"
       }
     },
     {
@@ -18877,12 +18852,14 @@
       "variant": 1,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -18904,26 +18881,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 71.84,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w93",
-          "focusMode": "phrase"
         }
       ],
       "transition": "raster",
       "performance": {
         "enabled": true,
-        "camera": "rack-1",
-        "typography": "mono-bold-3",
+        "camera": "portrait-0",
+        "typography": "mono-bold-0",
         "gesture": "explain-1",
-        "texture": "duotone-0",
+        "texture": "clean",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "brackets"
       }
     },
     {
@@ -18960,13 +18931,13 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.25,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.54,
-        "focusY": 0.61,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -19025,24 +18996,27 @@
           "strength": 0.32
         },
         {
-          "at": 78.228,
-          "duration": 1.4,
+          "at": 77.94,
+          "duration": 1.0012517046069178,
           "type": "focus",
           "strength": 1,
-          "wordId": "w99",
-          "focusMode": "word"
+          "wordId": "w98",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "mosaic",
       "performance": {
         "enabled": true,
-        "camera": "float-0",
-        "typography": "mono-3",
+        "camera": "portrait-2",
+        "typography": "mono-1",
         "gesture": "resolve-1",
-        "texture": "datamosh-1",
+        "texture": "softfocus-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rings"
       }
     },
     {
@@ -19077,12 +19051,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
-        "roll": 2,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19111,26 +19087,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 81.76,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w107",
-          "focusMode": "phrase"
         }
       ],
       "transition": "shutter",
       "performance": {
         "enabled": true,
-        "camera": "pendulum-2",
-        "typography": "sans-2",
+        "camera": "snap-0",
+        "typography": "mono-italic-0",
         "gesture": "refuse-3",
-        "texture": "duotone-2",
+        "texture": "chromatic-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "pulse"
       }
     },
     {
@@ -19165,12 +19135,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -32,
         "panY": 0,
-        "roll": -3.5,
+        "roll": -1.8,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19230,26 +19202,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 84.14,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w113",
-          "focusMode": "word"
         }
       ],
       "transition": "whip",
       "performance": {
         "enabled": true,
-        "camera": "pendulum-0",
-        "typography": "mono-bold-2",
+        "camera": "recoil-0",
+        "typography": "mono-2",
         "gesture": "search-3",
-        "texture": "halftone-2",
+        "texture": "softfocus-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "ripple"
       }
     },
     {
@@ -19283,12 +19249,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -32,
         "panY": 0,
-        "roll": -3.5,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19313,24 +19281,27 @@
           "wordId": "w123"
         },
         {
-          "at": 89.72,
-          "duration": 2.6,
+          "at": 88.52,
+          "duration": 2.1400000000000032,
           "type": "focus",
           "strength": 1,
-          "wordId": "w123",
-          "focusMode": "phrase"
+          "wordId": "w120",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "crosszoom",
       "performance": {
         "enabled": true,
-        "camera": "dolly-0",
-        "typography": "mono-bold-1",
+        "camera": "dolly-1",
+        "typography": "mono-bold-0",
         "gesture": "search-2",
-        "texture": "contrast-0",
+        "texture": "chromatic-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rays"
       }
     },
     {
@@ -19373,13 +19344,13 @@
       "variant": 1,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 2.1,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.42,
-        "focusY": 0.63,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -19409,26 +19380,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 96.86,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w137",
-          "focusMode": "phrase"
         }
       ],
       "transition": "aperture",
       "performance": {
         "enabled": true,
-        "camera": "depth-1",
-        "typography": "sans-0",
+        "camera": "snap-2",
+        "typography": "mono-bold-2",
         "gesture": "protect-1",
-        "texture": "monochrome-2",
+        "texture": "clean",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "bars"
       }
     },
     {
@@ -19467,13 +19432,13 @@
       "variant": 4,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.5,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.58,
-        "focusY": 0.6,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -19505,24 +19470,27 @@
           "strength": 0.32
         },
         {
-          "at": 103.28,
+          "at": 102.22,
           "duration": 2.6,
           "type": "focus",
           "strength": 1,
-          "wordId": "w142",
-          "focusMode": "phrase"
+          "wordId": "w140",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "split",
       "performance": {
         "enabled": true,
-        "camera": "snap-0",
-        "typography": "serif-2",
+        "camera": "glide-0",
+        "typography": "mono-italic-2",
         "gesture": "point-1",
-        "texture": "scanlines-2",
+        "texture": "dust-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "diamonds"
       }
     },
     {
@@ -19554,13 +19522,15 @@
       "accent": "TÃO PEQUENO",
       "variant": 5,
       "camera": {
-        "zoomFrom": 1.12,
-        "zoomTo": 0.86,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19575,26 +19545,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 107.54,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w147",
-          "focusMode": "word"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "snap-1",
-        "typography": "mono-3",
+        "camera": "glide-2",
+        "typography": "mono-1",
         "gesture": "point-1",
-        "texture": "posterize-2",
+        "texture": "scanlines-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "waveform"
       }
     },
     {
@@ -19631,12 +19595,14 @@
       "variant": 5,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.09,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19659,26 +19625,20 @@
           "type": "impact",
           "strength": 0.5,
           "wordId": "w153"
-        },
-        {
-          "at": 110.48,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w150",
-          "focusMode": "phrase"
         }
       ],
       "transition": "raster",
       "performance": {
         "enabled": true,
-        "camera": "tilt-1",
-        "typography": "serif-1",
+        "camera": "crane-0",
+        "typography": "mono-italic-1",
         "gesture": "protect-3",
-        "texture": "chromatic-1",
+        "texture": "softfocus-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "brackets"
       }
     },
     {
@@ -19718,13 +19678,15 @@
       "accent": "TÃO PEQUENO",
       "variant": 0,
       "camera": {
-        "zoomFrom": 1.12,
-        "zoomTo": 0.86,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19745,26 +19707,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 117.54,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w163",
-          "focusMode": "phrase"
         }
       ],
       "transition": "aperture",
       "performance": {
         "enabled": true,
-        "camera": "pendulum-1",
-        "typography": "mono-bold-0",
+        "camera": "recoil-2",
+        "typography": "mono-2",
         "gesture": "search-1",
-        "texture": "vignette-0",
+        "texture": "dust-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rings"
       }
     },
     {
@@ -19806,13 +19762,13 @@
       "variant": 2,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 2.1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.42,
-        "focusY": 0.63,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -19844,24 +19800,27 @@
           "strength": 0.32
         },
         {
-          "at": 121.36,
-          "duration": 2.6,
+          "at": 121.98,
+          "duration": 2.080000000000001,
           "type": "focus",
           "strength": 1,
-          "wordId": "w170",
-          "focusMode": "phrase"
+          "wordId": "w171",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
         "camera": "dolly-2",
-        "typography": "serif-1",
+        "typography": "mono-italic-1",
         "gesture": "protect-3",
-        "texture": "duotone-2",
+        "texture": "chromatic-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "pulse"
       }
     },
     {
@@ -19890,13 +19849,15 @@
       "accent": "VONTADE",
       "variant": 2,
       "camera": {
-        "zoomFrom": 1.05,
-        "zoomTo": 1,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19918,26 +19879,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 127.92,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w182",
-          "focusMode": "phrase"
         }
       ],
       "transition": "channel",
       "performance": {
         "enabled": true,
-        "camera": "snap-0",
+        "camera": "glide-0",
         "typography": "mono-0",
         "gesture": "explain-1",
-        "texture": "chromatic-2",
+        "texture": "softfocus-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "ripple"
       }
     },
     {
@@ -19969,12 +19924,14 @@
       "variant": 2,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -19990,26 +19947,20 @@
           "type": "impact",
           "strength": 0.5,
           "wordId": "w188"
-        },
-        {
-          "at": 133.3,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w188",
-          "focusMode": "phrase"
         }
       ],
       "transition": "split",
       "performance": {
         "enabled": true,
-        "camera": "tilt-2",
+        "camera": "crane-2",
         "typography": "mono-1",
         "gesture": "explain-0",
-        "texture": "monochrome-0",
+        "texture": "clean",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rays"
       }
     },
     {
@@ -20039,12 +19990,14 @@
       "variant": 1,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
-        "roll": 2,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20064,13 +20017,15 @@
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "depth-1",
-        "typography": "sans-1",
+        "camera": "snap-2",
+        "typography": "mono-italic-0",
         "gesture": "refuse-1",
-        "texture": "scanlines-2",
+        "texture": "dust-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "bars"
       }
     },
     {
@@ -20096,13 +20051,15 @@
       "accent": "NÃO",
       "variant": 1,
       "camera": {
-        "zoomFrom": 1.1400000000000001,
-        "zoomTo": 1.23,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
-        "roll": 0.5995088386518094,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20118,26 +20075,20 @@
           "type": "impact",
           "strength": 0.85,
           "wordId": "w193"
-        },
-        {
-          "at": 136.88,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w193",
-          "focusMode": "word"
         }
       ],
       "transition": "typewriter",
       "performance": {
         "enabled": true,
-        "camera": "orbit-1",
-        "typography": "mono-italic-0",
+        "camera": "tilt-0",
+        "typography": "mono-bold-0",
         "gesture": "refuse-1",
-        "texture": "halftone-2",
+        "texture": "softfocus-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "diamonds"
       }
     },
     {
@@ -20167,12 +20118,14 @@
       "variant": 2,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
-        "roll": 2,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20192,13 +20145,15 @@
       "transition": "typewriter",
       "performance": {
         "enabled": true,
-        "camera": "rack-1",
-        "typography": "sans-3",
+        "camera": "spiral-2",
+        "typography": "mono-italic-1",
         "gesture": "refuse-1",
-        "texture": "posterize-1",
+        "texture": "chromatic-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "waveform"
       }
     },
     {
@@ -20224,13 +20179,15 @@
       "accent": "NÃO",
       "variant": 2,
       "camera": {
-        "zoomFrom": 1.2000000000000002,
-        "zoomTo": 1.23,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
-        "roll": 3.6517810029105107,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20246,26 +20203,20 @@
           "type": "impact",
           "strength": 0.85,
           "wordId": "w198"
-        },
-        {
-          "at": 140.48,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w198",
-          "focusMode": "word"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "hinge-1",
-        "typography": "serif-1",
+        "camera": "depth-0",
+        "typography": "mono-italic-2",
         "gesture": "refuse-2",
         "texture": "clean",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "brackets"
       }
     },
     {
@@ -20295,12 +20246,14 @@
       "variant": 3,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
-        "roll": 2,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20320,13 +20273,15 @@
       "transition": "channel",
       "performance": {
         "enabled": true,
-        "camera": "depth-0",
-        "typography": "mono-italic-0",
+        "camera": "snap-1",
+        "typography": "mono-bold-0",
         "gesture": "refuse-0",
-        "texture": "duotone-2",
+        "texture": "chromatic-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rings"
       }
     },
     {
@@ -20352,13 +20307,15 @@
       "accent": "NÃO",
       "variant": 3,
       "camera": {
-        "zoomFrom": 1.08,
-        "zoomTo": 1.23,
+        "zoomFrom": 1,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
-        "roll": 3.3466225541442243,
+        "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20374,26 +20331,20 @@
           "type": "impact",
           "strength": 0.85,
           "wordId": "w203"
-        },
-        {
-          "at": 144.08,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w203",
-          "focusMode": "word"
         }
       ],
       "transition": "split",
       "performance": {
         "enabled": true,
-        "camera": "snap-0",
-        "typography": "mono-bold-0",
+        "camera": "glide-0",
+        "typography": "mono-1",
         "gesture": "refuse-2",
-        "texture": "chromatic-0",
+        "texture": "scanlines-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "pulse"
       }
     },
     {
@@ -20417,12 +20368,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20442,13 +20395,15 @@
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "recoil-2",
-        "typography": "serif-2",
+        "camera": "float-1",
+        "typography": "mono-italic-2",
         "gesture": "explain-1",
-        "texture": "scanlines-1",
+        "texture": "dust-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "ripple"
       }
     },
     {
@@ -20487,12 +20442,14 @@
       "variant": 6,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20523,24 +20480,27 @@
           "strength": 0.32
         },
         {
-          "at": 153.94,
+          "at": 152.8,
           "duration": 2.6,
           "type": "focus",
           "strength": 1,
-          "wordId": "w210",
-          "focusMode": "phrase"
+          "wordId": "w208",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "ripple",
       "performance": {
         "enabled": true,
-        "camera": "pendulum-2",
-        "typography": "serif-0",
+        "camera": "snap-0",
+        "typography": "mono-italic-1",
         "gesture": "point-3",
-        "texture": "halftone-0",
+        "texture": "softfocus-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rays"
       }
     },
     {
@@ -20573,13 +20533,13 @@
       "variant": 7,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.5,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.58,
-        "focusY": 0.6,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -20595,26 +20555,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 158.52,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w215",
-          "focusMode": "word"
         }
       ],
       "transition": "iris",
       "performance": {
         "enabled": true,
-        "camera": "crane-1",
-        "typography": "sans-1",
+        "camera": "sweep-1",
+        "typography": "mono-italic-0",
         "gesture": "point-1",
-        "texture": "vignette-1",
+        "texture": "dust-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "bars"
       }
     },
     {
@@ -20651,13 +20605,13 @@
       "variant": 7,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.09,
+        "zoomTo": 1.07,
         "panX": 12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "focusX": 0.58,
-        "focusY": 0.6,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -20681,26 +20635,20 @@
           "type": "impact",
           "strength": 0.5,
           "wordId": "w221"
-        },
-        {
-          "at": 161.12,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w218",
-          "focusMode": "phrase"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "dolly-1",
-        "typography": "mono-bold-2",
+        "camera": "dolly-2",
+        "typography": "mono-bold-0",
         "gesture": "protect-1",
-        "texture": "datamosh-1",
+        "texture": "softfocus-0",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "diamonds"
       }
     },
     {
@@ -20748,13 +20696,13 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.15,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.1,
-        "focusX": 0.48,
-        "focusY": 0.6,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -20805,24 +20753,27 @@
           "strength": 0.32
         },
         {
-          "at": 175.84,
-          "duration": 1.4,
+          "at": 173.18,
+          "duration": 2.6,
           "type": "focus",
           "strength": 1,
-          "wordId": "w239",
-          "focusMode": "word"
+          "wordId": "w236",
+          "focusMode": "phrase",
+          "source": "auto"
         }
       ],
       "transition": "dissolve",
       "performance": {
         "enabled": true,
         "camera": "crane-1",
-        "typography": "serif-0",
+        "typography": "mono-italic-1",
         "gesture": "release-0",
-        "texture": "vignette-0",
+        "texture": "dust-0",
         "rhythm": "breath",
         "intensity": 0.45,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.3,
+        "beatStyle": "waveform"
       }
     },
     {
@@ -20851,12 +20802,14 @@
       "variant": 0,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 1.04,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.45,
-        "lyricFocus": 1
+        "lyricFocus": 1,
+        "focusX": 0.5,
+        "focusY": 0.52
       },
       "motions": [
         {
@@ -20895,26 +20848,20 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 179.98,
-          "duration": 1.4,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w241",
-          "focusMode": "word"
         }
       ],
       "transition": "aperture",
       "performance": {
         "enabled": true,
-        "camera": "float-1",
-        "typography": "mono-bold-2",
+        "camera": "reveal-1",
+        "typography": "mono-2",
         "gesture": "point-2",
-        "texture": "vignette-1",
+        "texture": "clean",
         "rhythm": "accent",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "brackets"
       }
     },
     {
@@ -20948,13 +20895,13 @@
       "variant": 8,
       "camera": {
         "zoomFrom": 1,
-        "zoomTo": 0.97,
+        "zoomTo": 1.07,
         "panX": -12,
         "panY": 0,
         "roll": 0,
         "shake": 0.05,
-        "focusX": 0.58,
-        "focusY": 0.6,
+        "focusX": 0.5,
+        "focusY": 0.52,
         "lyricFocus": 1
       },
       "motions": [
@@ -20990,36 +20937,31 @@
           "duration": 0.14,
           "type": "glitch",
           "strength": 0.32
-        },
-        {
-          "at": 186.38,
-          "duration": 2.6,
-          "type": "focus",
-          "strength": 1,
-          "wordId": "w244",
-          "focusMode": "phrase"
         }
       ],
       "transition": "cut",
       "performance": {
         "enabled": true,
-        "camera": "pendulum-2",
-        "typography": "mono-bold-0",
+        "camera": "recoil-2",
+        "typography": "mono-1",
         "gesture": "protect-0",
-        "texture": "vignette-2",
+        "texture": "dust-0",
         "rhythm": "legato",
         "intensity": 0.72,
-        "variation": 0
+        "variation": 0,
+        "beatSync": 0.7,
+        "beatStyle": "rings"
       }
     }
   ],
   "character": {
     "name": "Testemunha",
     "stroke": "#e9e5dc",
-    "thickness": 3.2,
+    "thickness": 1.7,
     "scale": 1,
-    "head": 1,
-    "heart": true
+    "head": 0.9,
+    "heart": false,
+    "design": "ink"
   },
   "style": {
     "name": "terminal-noir",
@@ -21069,5 +21011,7 @@
       "This describes technical properties; it does not infer narrative meaning."
     ]
   },
-  "language": "pt"
+  "language": "pt",
+  "direction": "reel",
+  "lyricFocusPolicy": "balanced-v1"
 }
