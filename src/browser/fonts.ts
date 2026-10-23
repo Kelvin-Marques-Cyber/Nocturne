@@ -21,17 +21,21 @@ export async function loadFilmFonts(text:string){
 }
 // SVG rendered as an image cannot borrow document web fonts. Convert text to
 // glyph contours once per distinct string/size, preserving the preview layout.
-export function outlineText(svg:string,fonts:Font[],cache:Map<string,string>){
+export function outlineText(svg:string,fonts:Font[],cache:Map<string,{d:string;width:number}>){
  const doc=new DOMParser().parseFromString(svg,'image/svg+xml');
  for(const text of doc.querySelectorAll('text')){
   const value=(text.textContent??'').normalize('NFC'),size=Number(text.getAttribute('font-size')??16),family=(text.getAttribute('font-family')??'DejaVu Sans Mono').split(',')[0].replace(/['"]/g,'').trim(),weight=Number(text.getAttribute('font-weight')??400),italic=['oblique','italic'].includes(text.getAttribute('font-style')??''),spacing=Number(text.getAttribute('letter-spacing')??0);
   const primary=fonts.find(f=>{const face=faceInfo.get(f);return face?.family===family&&face.weight===weight&&face.italic===italic;})??fonts[0],key=[family,weight,italic,value,size,spacing,fonts.length].join('|');
-  let d=cache.get(key);
-  let width=0;
-  const glyphs=[...value].map(char=>{const font=primary.charToGlyphIndex(char)!==0?primary:fonts.find(f=>f.charToGlyphIndex(char)!==0)??primary;return{font,glyph:font.charToGlyph(char)};});
-  if(d===undefined){const parts:string[]=[];for(const {font,glyph}of glyphs){parts.push(glyph.getPath(width,0,size).toPathData(3));width+=(glyph.advanceWidth??font.unitsPerEm*.61)*size/font.unitsPerEm+spacing;}d=parts.join('');cache.set(key,d);}
-  else for(const {font,glyph}of glyphs)width+=(glyph.advanceWidth??font.unitsPerEm*.61)*size/font.unitsPerEm+spacing;
-  width=Math.max(0,width-(glyphs.length?spacing:0));
+  let cached=cache.get(key);
+  if(!cached){
+   let width=0;
+   const glyphs=[...value].map(char=>{const font=primary.charToGlyphIndex(char)!==0?primary:fonts.find(f=>f.charToGlyphIndex(char)!==0)??primary;return{font,glyph:font.charToGlyph(char)};});
+   const parts:string[]=[];
+   for(const {font,glyph}of glyphs){parts.push(glyph.getPath(width,0,size).toPathData(3));width+=(glyph.advanceWidth??font.unitsPerEm*.61)*size/font.unitsPerEm+spacing;}
+   cached={d:parts.join(''),width:Math.max(0,width-(glyphs.length?spacing:0))};
+   cache.set(key,cached);
+  }
+  const {d,width}=cached;
   const path=doc.createElementNS('http://www.w3.org/2000/svg','path');
   for(const attr of text.attributes)if(!['x','y','font-size','font-family','text-anchor','letter-spacing','font-weight','font-style','font-kerning'].includes(attr.name))path.setAttribute(attr.name,attr.value);
   const transform=text.getAttribute('transform')??'',x=Number(text.getAttribute('x')??0),y=Number(text.getAttribute('y')??0);
