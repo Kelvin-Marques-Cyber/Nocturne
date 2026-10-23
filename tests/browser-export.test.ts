@@ -29,7 +29,7 @@ test('PWA outlines text without rebuilding the entire SVG DOM for every frame',(
  assert.ok(!first.includes('<text '));
  assert.match(first,/data-word="one"/);
  assert.match(first,/fill="#ffffff"/);
- assert.match(first,/transform=" translate\(70 200\)"/);
+ assert.match(first,/transform=" translate\(85 200\)"/);
  assert.match(first,/d="M0 0h1M10 0h1M20 0h1"/);
 });
 test('PWA glyph conversion preserves group transforms and Unicode character count',()=>{
