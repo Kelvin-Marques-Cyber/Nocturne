@@ -33,8 +33,13 @@ const server=createServer(async(req,res)=>{
   if(pathname==='/api/audio'&&req.method==='POST'){
    const name=url.searchParams.get('name')??'',ext=extname(name).toLowerCase();if(!['.mp3','.wav','.flac'].includes(ext))throw Error('Importe MP3, WAV ou FLAC.');
    const id=randomUUID().slice(0,8),audio=`media/import-${id}${ext}`,path=join('public',audio),analysisPath=`projects/import-${id}-analysis.json`;
-   await writeFile(path,await body(req,256*1024*1024));await runPython(['scripts/analyze.py',path,'--out',analysisPath]);
-   json(res,{audio,title:basename(name,ext),analysis:JSON.parse(await readFile(analysisPath,'utf8'))});return;
+   await writeFile(path,await body(req,256*1024*1024));
+   // Preserve uploads when Python, NumPy, SciPy or FFmpeg is unavailable.
+   // The editor can analyze the same local File with its browser worker.
+   let analysis:unknown=null;
+   try{await runPython(['scripts/analyze.py',path,'--out',analysisPath]);analysis=JSON.parse(await readFile(analysisPath,'utf8'));}
+   catch(error){console.warn('Análise Python indisponível; utilizando fallback no navegador:',error);}
+   json(res,{audio,title:basename(name,ext),analysis});return;
   }
   if(pathname==='/api/storyboard'&&req.method==='POST'){
    const {project,lyrics,transcript}=await parse(req)as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
