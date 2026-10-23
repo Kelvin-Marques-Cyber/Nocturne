@@ -25,7 +25,7 @@ if(v.transcribe){transcriptPath=`projects/${slug}-asr.json`;await run(['scripts/
 const analysis=JSON.parse(await readFile(analysisPath,'utf8'))as Analysis;
 const lyrics=await readFile(v.lyrics,'utf8');
 const transcript=transcriptPath?JSON.parse(await readFile(transcriptPath,'utf8'))as Transcript:undefined;
-const aligned=alignLyrics(lyrics,analysis,transcript,language);
+const aligned=alignLyrics(lyrics,analysis,transcript,language,[],v.title);
 if(transcript){analysis.vocalRegions=transcript.segments.filter(s=>s.end>s.start).map(s=>({start:s.start,end:s.end,confidence:.8}));analysis.warnings=analysis.warnings.filter(s=>!s.startsWith('Vocal'));}
 const project=makeProject({title:v.title!,artist:v.artist,language,audio:'media/'+mediaName,lyrics,analysis,words:aligned.words,alignment:{method:aligned.method,coverage:aligned.coverage,reviewRequired:true,notes:aligned.notes}});
 // Keep provenance concise; words already live at project.words.

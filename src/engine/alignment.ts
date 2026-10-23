@@ -5,6 +5,11 @@ import {normalize} from './model';
 import {tokenizeLyrics,tokenizeLine,type Language} from './language';
 import {clamp,mix} from './math';
 export interface Transcript {method?:string;language?:string;segments:{start:number;end:number;text:string;words?:{text:string;start:number;end:number;confidence?:number}[]}[]}
+export function retainedTranscript(words:Word[]):Transcript|undefined {
+ const anchored=words.filter(w=>w.source==='asr'||w.source==='manual');
+ if(!anchored.length)return undefined;
+ return{method:'retained-word-anchors',segments:[{start:anchored[0].start,end:anchored.at(-1)!.end,text:anchored.map(w=>w.text).join(' '),words:anchored.map(w=>({text:w.text,start:w.start,end:w.end,confidence:w.confidence}))}]};
+}
 function similarity(a:string,b:string){
  a=normalize(a);b=normalize(b);if(a===b)return 1;if(Math.min(a.length,b.length)<4)return 0;
  let row=Array.from({length:b.length+1},(_,i)=>i);
@@ -51,8 +56,8 @@ function reusePriorTiming(tokens:ReturnType<typeof tokenizeLyrics>,prior:Word[],
  return words;
 }
 
-export function alignLyrics(lyrics:string,analysis:Analysis,transcript?:Transcript,language:Language='auto',priorWords:Word[]=[]){
- const tokens=tokenizeLyrics(lyrics,language);
+export function alignLyrics(lyrics:string,analysis:Analysis,transcript?:Transcript,language:Language='auto',priorWords:Word[]=[],titleHint?:string){
+ const tokens=tokenizeLyrics(lyrics,language,titleHint);
 
  if(!tokens.length)return {words:[]as Word[],coverage:0,method:'no-lyrics',notes:['Sem letra. Cenas instrumentais.']};
  // Regenerating text without another transcript must preserve already-aligned words.

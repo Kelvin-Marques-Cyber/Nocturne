@@ -11,9 +11,10 @@ import {languages,lyricContent,type Language} from '../engine/language';
 import {filterLabels,styleLabels,filter} from '../engine/effects';
 import {transitionLabels} from '../engine/transitions';
 import {clamp} from '../engine/math';
-import {api,browserMode,base,importAudioFile,audioURL} from './platform';
+import {api,browserMode,base,importAudioFile,audioURL,cachedTranscript,rememberTranscript} from './platform';
 import {PerformancePanel} from './PerformancePanel';
 import {SceneLibrary} from './SceneLibrary';
+import {retainedTranscript,type Transcript} from '../engine/alignment';
 import {FilmPreview} from './FilmPreview';
 import {markWordAtAudio} from '../engine/sync';
 import {saveEditorDraft,restoreDraftLyrics} from './draft';
@@ -34,6 +35,8 @@ function App(){
  const [audioSource,setAudioSource]=useState<string>(),[offline,setOffline]=useState(!navigator.onLine),[pwaState,setPwaState]=useState(''),[install,setInstall]=useState<(Event&{prompt:()=>Promise<void>})|undefined>();
  const [renderStats,setRenderStats]=useState<{fps:number;remaining:number;workers:number}>();
  const exportAbort=useRef<AbortController|undefined>(undefined);
+ const [voiceSyncing,setVoiceSyncing]=useState(false),voiceAbort=useRef<AbortController|undefined>(undefined);
+ useEffect(()=>()=>voiceAbort.current?.abort(),[]);
  const [waitingWorker,setWaitingWorker]=useState<ServiceWorker>(),updateRequested=useRef(false);
  const lyricsNow=useRef(lyrics);lyricsNow.current=lyrics;
  const generation=useRef(0),importing=useRef(false);
@@ -64,10 +67,10 @@ function App(){
  useEffect(()=>{api('/api/demo').then((p:Project)=>{let chosen=p;try{const saved=localStorage.getItem('nocturne-project');if(saved){const parsed=JSON.parse(saved);validateProject(parsed);chosen=parsed;}}catch{}chosen=rebalanceLyricFocus(chosen);if(!chosen.direction&&!chosen.character.design)chosen={...chosen,direction:'reel',character:{...chosen.character,design:'ink',thickness:1.7,head:.9,heart:false}};setProject(chosen);setLyrics(restoreDraftLyrics(chosen));setSelected(chosen.scenes[0].id);setStatus('Projeto pronto. Espaço para reproduzir.');}).catch(e=>setStatus(e.message));},[]);
  useEffect(()=>{if(project){const id=setTimeout(()=>{try{saveEditorDraft(project,lyrics);}catch{setStatus('Não foi possível guardar o rascunho no aparelho. Salve o JSON.');}},600);return()=>clearTimeout(id);}},[project,lyrics]);
  useEffect(()=>{
-  if(!project||lyrics===project.lyrics||importing.current)return;
+  if(!project||lyrics===project.lyrics||importing.current||voiceSyncing)return;
   const id=setTimeout(()=>{void generate(undefined,true);},850);
   return()=>clearTimeout(id);
- },[lyrics,project?.id,project?.audio,project?.language]);
+ },[lyrics,project?.id,project?.audio,project?.language,voiceSyncing]);
  const edit=useCallback((fn:(p:Project)=>Project)=>{setProject(p=>{if(!p)return p;history.current=[...history.current.slice(-39),p];future.current=[];return fn(p);});},[]);
  function undo(){const p=history.current.pop();if(p&&project){future.current.push(project);setProject(p);setLyrics(p.lyrics);}}
  function redo(){const p=future.current.pop();if(p&&project){history.current.push(project);setProject(p);setLyrics(p.lyrics);}}
@@ -89,11 +92,13 @@ function App(){
  }
  function editWord(field:'start'|'end',value:number){if(!chosenWord||!project||!Number.isFinite(value))return;edit(p=>{const ws=p.words.map(w=>({...w})),i=ws.findIndex(w=>w.id===chosenWord.id),w=ws[i];if(field==='start')w.start=clamp(value,ws[i-1]?.start??0,w.end-.008);else w.end=clamp(value,w.start+.008,p.duration);w.source='manual';w.confidence=1;return{...p,words:ws,scenes:p.scenes.map(s=>({...s,events:s.events.map(event=>event.wordId===w.id?{...event,at:w.start}:event)}))};});}
  async function generate(transcript?:unknown,automatic=false):Promise<Project|undefined>{
-  const source=current.current,draft=lyricsNow.current;if(!source||importing.current)return;
+  const source=current.current,draft=lyricsNow.current;if(!source||importing.current||voiceAbort.current)return;
   if(automatic&&draft===source.lyrics)return source;
   const request=++generation.current;setBusy(true);setStatus('Atualizando palavras, cenas e animações…');
   try{
-   const next=await api('/api/storyboard',{project:{...source,title:lyricContent(draft).title??source.title},lyrics:draft,transcript});
+   const recognized=transcript??retainedTranscript(source.words)??await cachedTranscript(source.audio);
+   const next=await api('/api/storyboard',{project:{...source,title:lyricContent(draft).title??source.title},lyrics:draft,transcript:recognized});
+   if(transcript)await rememberTranscript(source.audio,transcript as Transcript).catch(()=>{});
    if(request!==generation.current||lyricsNow.current!==draft||current.current?.id!==source.id||current.current?.audio!==source.audio)return;
    const ready={...next,style:current.current.style,character:current.current.character};
    edit(()=>ready);setSelected(sceneAt(ready,Math.min(time,ready.duration-.001)).id);setWordId('');
@@ -101,15 +106,34 @@ function App(){
   }catch(e){if(request===generation.current)setStatus(String(e));}
   finally{if(request===generation.current)setBusy(false);}
  }
+ async function synchronizeVoice(input?:Project){
+  const source=input??current.current;if(!source||voiceAbort.current||importing.current)return;
+  const controller=new AbortController(),request=++generation.current;voiceAbort.current=controller;setVoiceSyncing(true);setBusy(true);audio.current?.pause();
+  try{
+   const {recognizeVoice}=await import('../browser/speech');
+   const transcript=await recognizeVoice(source.audio,source.language??'auto',controller.signal,message=>{if(request===generation.current)setStatus(message);});
+   if(controller.signal.aborted||request!==generation.current||current.current?.audio!==source.audio||current.current?.id!==source.id)return;
+   await rememberTranscript(source.audio,transcript).catch(()=>{});
+   const latest=current.current,draft=lyricsNow.current;
+   const next=await api('/api/storyboard',{project:latest,lyrics:draft,transcript});
+   if(controller.signal.aborted||request!==generation.current||current.current?.audio!==source.audio||lyricsNow.current!==draft)return;
+   if(next.words.length&&next.alignment.coverage<.15)throw Error('Poucas palavras reconhecidas nesta gravação. Os tempos anteriores foram preservados; revise os trechos cantados ou importe outra transcrição.');
+   const ready={...next,style:current.current.style,character:current.current.character};
+   edit(()=>ready);setSelected(sceneAt(ready,Math.min(time,ready.duration-.001)).id);setWordId('');
+   setStatus(`Sincronização pela voz aplicada: ${Math.round(ready.alignment.coverage*100)}% das palavras reconhecidas; demais tempos precisam de revisão.`);
+  }catch(error){if(request===generation.current)setStatus(String(error));}
+  finally{if(voiceAbort.current===controller){voiceAbort.current=undefined;setVoiceSyncing(false);if(request===generation.current)setBusy(false);}}
+ }
  async function importAudio(file:File){
-  if(importing.current)return;const sourceId=current.current?.id,request=++generation.current;importing.current=true;setBusy(true);audio.current?.pause();setStatus('Analisando batidas, intensidade e seções…');
+  if(importing.current||voiceAbort.current)return;let imported:Project|undefined;const sourceId=current.current?.id,request=++generation.current;importing.current=true;setBusy(true);audio.current?.pause();setStatus('Analisando batidas, intensidade e seções…');
   try{
    const result=await importAudioFile(file),source=current.current;if(!source||request!==generation.current||source.id!==sourceId)return;
    const draft=lyricsNow.current,p=makeProject({title:lyricContent(draft).title??result.title,language:source.language,audio:result.audio,lyrics:draft,analysis:result.analysis,words:[],alignment:{method:'not-aligned',coverage:0,reviewRequired:true,notes:[]}});
    const next=await api('/api/storyboard',{project:p,lyrics:draft});
    if(request!==generation.current||current.current?.id!==sourceId)return;
-   edit(()=>next);setTime(0);setSelected(next.scenes[0].id);setWordId('');setStatus(`Áudio importado: ${next.words.length} palavras e ${next.scenes.length} cenas geradas automaticamente.${result.analysisFallback?' Análise executada no navegador (Python indisponível).':''}`);
+   edit(()=>next);imported=next;setTime(0);setSelected(next.scenes[0].id);setWordId('');setStatus(`Áudio importado: ${next.words.length} palavras e ${next.scenes.length} cenas geradas automaticamente.${result.analysisFallback?' Análise executada no navegador (Python indisponível).':''}`);
   }catch(e){if(request===generation.current)setStatus(String(e));}finally{if(request===generation.current){importing.current=false;setBusy(false);}}
+  if(imported)void synchronizeVoice(imported);
  }
  async function downloadJSON(){const ready=lyricsNow.current!==project?.lyrics?await generate():project;if(!ready)return;try{validateProject(ready);}catch(e){setStatus(String(e));return;}const blob=new Blob([JSON.stringify(ready,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='nocturne-storyboard.json';a.click();URL.revokeObjectURL(url);api('/api/project',ready).then(()=>setStatus('JSON salvo e baixado.')).catch(e=>setStatus(e.message));}
  function updatePwa(){
@@ -135,7 +159,7 @@ function App(){
   <div className="workspace">
    <aside className="left-panel"><div className="tabs"><button className={tab==='scenes'?'active':''} onClick={()=>setTab('scenes')}>Cenas <span>{project.scenes.length}</span></button><button className={tab==='lyrics'?'active':''} onClick={()=>setTab('lyrics')}>Letra</button><button className={tab==='source'?'active':''} onClick={()=>setTab('source')}>Fonte</button></div>
     {tab==='scenes'?<><div className="panel-heading"><span>STORYBOARD</span><span className="muted">{timecode(project.duration).slice(0,5)} / {project.fps} FPS</span></div><div className="scene-list">{project.scenes.map((s,i)=><button key={s.id} className={'scene-card '+(s.id===scene.id?'selected':'')} onClick={()=>{setSelected(s.id);seek(s.start+.35);}}><div className={'scene-art art-'+s.kind}><span>{String(i+1).padStart(2,'0')}</span><div className="art-glyph">{s.kind==='television'?'▣':s.kind==='tunnel3d'?'◈':s.kind==='heart'?'♡':s.kind==='constellation'?'✧':s.kind==='corridor'?'↗':s.kind==='denial'?'!':s.kind==='rest'?'―':s.kind==='orbit'?'◎':'⌘'}</div></div><div className="scene-card-text"><b>{s.title}</b><small>{metaphors[s.kind].label}</small><span>{timecode(s.start).slice(0,5)} <i>—</i> {timecode(s.end).slice(0,5)}</span></div><span className="live-dot">{live?.id===s.id?'●':''}</span></button>)}</div><div className="left-footer"><Icon name="code" size={15}/><span>Palavras que viram acontecimentos.</span></div></>:null}
-    {tab==='lyrics'?<div className="lyrics-panel"><div className="panel-heading">LETRA DA MÚSICA<button onClick={()=>lyricsInput.current?.click()}>Importar .txt</button></div><p className="note">Cole sua letra. Palavras, cenas e animações são atualizadas automaticamente após a edição.</p><textarea className="lyrics" value={lyrics} onChange={e=>setLyrics(e.target.value)} aria-label="Letra da música"/><button className="primary wide" disabled={busy} onClick={()=>void generate()}><Icon name="film"/> Regerar storyboard</button><label className="field">Idioma da letra<select value={project.language??'auto'} onChange={e=>edit(p=>({...p,language:e.target.value as Language}))}>{Object.entries(languages).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><div className="note">O planejamento usa metáforas e regras editáveis. Tempos sem âncoras ASR são estimados.</div><button className="secondary wide" disabled={busy} onClick={()=>asrInput.current?.click()}>Importar transcrição ASR (.json)</button><div className="alignment-meter"><span>{project.words.length} palavras posicionadas <b>{project.alignment.coverage?Math.round(project.alignment.coverage*100)+'% reconhecidas':'Estimativa'}</b></span><div><i style={{width:project.alignment.coverage*100+'%'}}/></div><small>{project.alignment.coverage?'Tempos apoiados na transcrição importada.':'Sincronização estimada pelo áudio; ajuste os tempos quando necessário.'}</small></div><label className="field">Deslocamento do vídeo em relação à voz (segundos)<input type="number" min="-5" max="5" step=".05" value={project.visualSyncOffsetSeconds??0} onChange={e=>{const v=Number(e.target.value);if(Number.isFinite(v))edit(p=>({...p,visualSyncOffsetSeconds:Math.max(-5,Math.min(5,v))}));}}/></label><p className="note">Positivo: a letra e as cenas aparecem depois da voz. Negativo: aparecem antes. Para atrasos que variam ao longo da música, importe a transcrição ASR e ajuste os tempos por palavra.</p></div>:null}
+    {tab==='lyrics'?<div className="lyrics-panel"><div className="panel-heading">LETRA DA MÚSICA<button onClick={()=>lyricsInput.current?.click()}>Importar .txt</button></div><p className="note">Cole sua letra. Palavras, cenas e animações são atualizadas automaticamente após a edição.</p><textarea className="lyrics" value={lyrics} onChange={e=>setLyrics(e.target.value)} aria-label="Letra da música"/><button className="primary wide" disabled={busy} onClick={()=>void generate()}><Icon name="film"/> Regerar storyboard</button><label className="field">Idioma da letra<select value={project.language??'auto'} onChange={e=>edit(p=>({...p,language:e.target.value as Language}))}>{Object.entries(languages).map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label><div className="note">O planejamento usa metáforas e regras editáveis. Tempos sem âncoras ASR são estimados.</div><button className="primary wide" disabled={busy&&!voiceSyncing} onClick={()=>voiceSyncing?voiceAbort.current?.abort():void synchronizeVoice()}>{voiceSyncing?'Cancelar sincronização':'Sincronizar letra pela voz'}</button><p className="note">Reconhece os tempos das palavras neste aparelho. O primeiro uso baixa o modelo; músicas com voz sobreposta podem precisar de revisão. A importação de música inicia a sincronização automaticamente.</p><button className="secondary wide" disabled={busy} onClick={()=>asrInput.current?.click()}>Importar transcrição ASR (.json)</button><div className="alignment-meter"><span>{project.words.length} palavras posicionadas <b>{project.alignment.coverage?Math.round(project.alignment.coverage*100)+'% reconhecidas':'Estimativa'}</b></span><div><i style={{width:project.alignment.coverage*100+'%'}}/></div><small>{project.alignment.coverage?'Tempos apoiados na transcrição importada.':'Sincronização estimada pelo áudio; ajuste os tempos quando necessário.'}</small></div><label className="field">Deslocamento do vídeo em relação à voz (segundos)<input type="number" min="-5" max="5" step=".05" value={project.visualSyncOffsetSeconds??0} onChange={e=>{const v=Number(e.target.value);if(Number.isFinite(v))edit(p=>({...p,visualSyncOffsetSeconds:Math.max(-5,Math.min(5,v))}));}}/></label><p className="note">Positivo: a letra e as cenas aparecem depois da voz. Negativo: aparecem antes. Para atrasos que variam ao longo da música, importe a transcrição ASR e ajuste os tempos por palavra.</p></div>:null}
     {tab==='source'?<div className="source-panel"><div className="panel-heading">MATERIAL DO FILME</div><button className="import-box" disabled={busy} onClick={()=>upload.current?.click()}><Icon name="upload" size={28}/><b>Importar música</b><small>MP3, WAV ou FLAC · até 256 MB</small></button><div className="audio-file"><Icon name="audio"/><div><b>{project.title}</b><small>{project.analysis.tempoConfidence>0?project.analysis.bpm+' BPM':'BPM não identificado'} · {timecode(project.duration).slice(0,5)}</small></div></div><label className="field">Título<input value={project.title} onChange={e=>edit(p=>({...p,title:e.target.value}))}/></label><label className="field">Artista<input value={project.artist} onChange={e=>edit(p=>({...p,artist:e.target.value}))}/></label><button className="secondary wide" onClick={()=>jsonInput.current?.click()}>Abrir storyboard JSON</button><button className="secondary wide" onClick={()=>{setProject(undefined);localStorage.removeItem('nocturne-project');void api('/api/demo').then(raw=>{const p=rebalanceLyricFocus(raw);setProject(p);setLyrics(p.lyrics);setSelected(p.scenes[0].id);seek(0);});}}>Restaurar projeto demonstrativo</button>{browserMode?<div className="note">Seus arquivos ficam neste aparelho. Instale o app para abrir offline após o primeiro carregamento.</div>:null}<div className="note">Análise espectral: batidas, ataques, energia e fronteiras prováveis de seções. BPM pode ter ambiguidade de metade/dobro.</div></div>:null}
    </aside>
    <main className="main-panel">{browserMode&&!audioSource?<div className="import-banner"><span>Traga sua música para começar.</span><button onClick={()=>upload.current?.click()}>Importar áudio <Icon name="upload" size={13}/></button></div>:null}<div className="preview-toolbar"><div><Icon name="eye" size={15}/><span>MONITOR DE DIREÇÃO</span></div><div><select aria-label="Estilo visual" value={project.style.name} onChange={e=>edit(p=>({...p,style:structuredClone(styles[e.target.value as keyof typeof styles])}))}>{Object.keys(styles).map(key=><option key={key} value={key}>{styleLabels[key]}</option>)}</select><select aria-label="Formato do vídeo" value={project.format} onChange={e=>edit(p=>({...p,format:e.target.value as Project['format']}))}><option value="vertical">9:16 · Vertical</option><option value="horizontal">16:9 · Horizontal</option></select><select aria-label="Quadros por segundo" value={project.fps} onChange={e=>edit(p=>({...p,fps:Number(e.target.value)as 30|60}))}><option value="30">30 FPS</option><option value="60">60 FPS</option></select></div></div>

@@ -270,3 +270,9 @@ Os close-ups automáticos deixam pelo menos seis segundos de palco livre entre o
 351 opções selecionáveis: as 31 cenas originais e 320 composições procedurais em 40 novas famílias. Abismo, vale, farol, casa, mesa, jardim, trem, cartas, fotografia, fogo, mãos e outros mundos possuem geometria própria, com composições de noite, chuva, névoa, fratura, luz, reflexo e retorno. Não são 320 clipes desenhados à mão. A busca em Ajustes encontra famílias e composições; os novos storyboards escolhem pelo vocabulário da letra em português, inglês e espanhol e alternam oito composições antes de repetir uma família. Projetos antigos e escolhas manuais são preservados.
 
 O boneco mantém gestos mais contidos, ombros melhor separados e cotovelos levemente flexionados; planos de descanso preservam a postura sentada. A política de zoom espaçado continua ativa.
+
+## Sincronização pela voz no PWA
+
+A importação de música inicia o reconhecimento de palavras em um worker. Para um projeto já aberto, use **Letra → Sincronizar letra pela voz**. No primeiro uso é necessário acesso à internet para baixar o runtime Transformers.js 3.8.1 e o modelo multilíngue Whisper Base quantizado; o áudio é processado no aparelho. O botão permite cancelar. Os tempos reconhecidos e ajustes manuais do projeto são reaproveitados ao regerar; palavras não reconhecidas continuam sinalizadas para revisão. Voz cantada, coros, rap e mistura de idiomas podem exigir ajustes. Um deslocamento global só resolve atraso constante.
+
+O título, quando repetido em um bloco inicial igual ao título do projeto, é tratado como metadado e não como canto. Os tempos de áudio são usados igualmente na prévia e no MP4, independentemente do FPS escolhido.

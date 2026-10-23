@@ -55,9 +55,9 @@ function motions(kind:SceneKind,start:number,end:number):Motion[]{
  if(kind==='rest')return[{action:'kneel',start,end:start+d*.3},{action:'rest',start:start+d*.3,end}];
  return[{action:base,start,end}];
 }
-export function createStoryboard(lyrics:string,words:Word[],a:Analysis,language:Language='auto'):Scene[]{
+export function createStoryboard(lyrics:string,words:Word[],a:Analysis,language:Language='auto',titleHint?:string):Scene[]{
  const filmLanguage=language==='auto'?analyzeMeaning(lyrics).language:language;
- const stanzas=lyricContent(lyrics).text.split(/\n\s*\n/).filter(s=>s.trim());let cursor=0;
+ const stanzas=lyricContent(lyrics,titleHint).text.split(/\n\s*\n/).filter(s=>s.trim());let cursor=0;
  const groups=stanzas.map((text,i)=>{const count=tokenizeLyrics(text,language).length,ws=words.slice(cursor,cursor+count);cursor+=count;return{text,ws,i};});
  if(!groups.length)groups.push({text:'',ws:[],i:0});
  const motifs=new Map<SceneKind,number>();
@@ -116,5 +116,5 @@ export function createStoryboard(lyrics:string,words:Word[],a:Analysis,language:
  return planLyricFocus(directTransitions(assignScenePresets(directed.map((s,i)=>({...s,id:`s${i}`}))),a),words,language,a);
 }
 export function makeProject(input:{title:string;artist?:string;audio:string;lyrics:string;analysis:Analysis;words:Word[];alignment:Project['alignment'];language?:Language}):Project {
- return directPerformance({schemaVersion:1,direction:'reel',id:'project-'+Date.now().toString(36),lyricFocusPolicy:'balanced-v1',title:input.title,artist:input.artist??'Kelvin',language:input.language??'auto',seed:4271,duration:input.analysis.duration,audio:input.audio,lyrics:input.lyrics,fps:30,format:'vertical',analysis:input.analysis,words:input.words,scenes:createStoryboard(input.lyrics,input.words,input.analysis,input.language),character:{name:'Testemunha',stroke:'#e9e5dc',thickness:1.7,scale:1,head:.9,heart:false,design:'ink'},style:{...styles['terminal-noir']},alignment:input.alignment},0,true);
+ return directPerformance({schemaVersion:1,direction:'reel',id:'project-'+Date.now().toString(36),lyricFocusPolicy:'balanced-v1',title:input.title,artist:input.artist??'Kelvin',language:input.language??'auto',seed:4271,duration:input.analysis.duration,audio:input.audio,lyrics:input.lyrics,fps:30,format:'vertical',analysis:input.analysis,words:input.words,scenes:createStoryboard(input.lyrics,input.words,input.analysis,input.language,input.title),character:{name:'Testemunha',stroke:'#e9e5dc',thickness:1.7,scale:1,head:.9,heart:false,design:'ink'},style:{...styles['terminal-noir']},alignment:input.alignment},0,true);
 }
