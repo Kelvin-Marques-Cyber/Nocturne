@@ -9,6 +9,9 @@ import {evaluateLyricFocus,renderLyricFocus} from './focus';
 import {composeTransition,transitionDuration} from './transitions';
 import {applyEffects} from './effects';
 import {filmFont,textWidth,joinWords} from './language';
+import {expressivePose} from './expression';
+import {textureRecipes} from './catalog';
+import {beatAccents} from './beat';
 
 export function sceneAt(p:Project,t:number){return p.scenes.find(s=>t>=s.start&&t<s.end)??(t<p.scenes[0].start?p.scenes[0]:p.scenes.at(-1)!);}
 export function activeWord(p:Project,t:number){return p.words.find(w=>t>=w.start&&t<w.end);}
@@ -20,10 +23,10 @@ interface Ctx {p:Project;s:Scene;t:number;local:number;q:number;w:number;h:numbe
 function hero(c:Ctx,x:number,y:number,scale=1,ghost=false,time=c.t,contacts?:{left?:Point;right?:Point}){
  let motionTime=time;
  for(const e of c.s.events.filter(e=>e.type==='freeze'))if(time>=e.at)motionTime-=clamp(time-e.at,0,e.duration);
- const p=poseAt(c.s.motions,motionTime,c.p.analysis.bpm),unit=scale*c.u*c.p.character.scale;
+ const expression=expressivePose(poseAt(c.s.motions,motionTime,c.p.analysis.bpm),c.p,c.s,motionTime),p=expression.pose,unit=scale*c.u*c.p.character.scale;
  if(contacts?.left)p.leftHand=[(contacts.left[0]-x)/unit,(contacts.left[1]-y)/unit];
  if(contacts?.right)p.rightHand=[(contacts.right[0]-x)/unit,(contacts.right[1]-y)/unit];
- return `<g transform="translate(${n(x)} ${n(y)}) scale(${n(scale*c.u*c.p.character.scale)})">${characterSVG(p,c.p.character,c.accent,c.beat,ghost)}</g>`;
+ return `<g ${expression.gesture?`data-gesture="${expression.gesture}"`:''} transform="translate(${n(x)} ${n(y)}) scale(${n(scale*c.u*c.p.character.scale)})">${characterSVG(p,c.p.character,c.accent,c.beat,ghost)}</g>`;
 }
 function wordObject(c:Ctx,text:string,x:number,y:number,size:number,progress:number,extra=''){
  size=Math.min(size,c.w*.84/Math.max(1,textWidth(text)));
@@ -307,9 +310,12 @@ function sceneLayer(c:Ctx,frame:number,id:string){
   out+=txt(code,w*.075,h*.907,Math.min(18*u,w*.85/Math.max(1,textWidth(code))),c.fg,'opacity=".58"');
   out+=txt(p.artist.toUpperCase(),w*.075,h*.946,11*u,c.fg,'opacity=".28"')+txt('●  '+(p.duration-t<3?'END':'REC'),w*.82,h*.946,11*u,c.accent,'opacity=".55"')+'</g>';
  }
+ out+=beatAccents(p,s,t,w,h,a);
  if(focus)out+=renderLyricFocus(p,s,t,w,h,focus);
  const exposure=Math.max(0,...s.events.filter(e=>e.type==='flash').map(e=>pulse(t,e.at,e.duration*.35)*e.strength));
  if(exposure>.01)out+=`<rect width="${w}" height="${h}" fill="${c.fg}" opacity="${n(clamp(exposure)*.28*(1-a))}"/>`;
+ const texture=s.performance?.enabled?textureRecipes.find(r=>r.id===s.performance?.texture):undefined;
+ if(texture?.amount){const filtered=applyEffects(`<svg>${out}</svg>`,[{id:'performance',type:texture.type,amount:texture.amount*(s.performance?.intensity??1),enabled:true}],{width:w,height:h,frame,seed:p.seed,energy,beat:c.beat,focus:a,namespace:id});return filtered.slice(filtered.indexOf('>')+1,-6);}
  return out;
 }
 export function renderFrame(p:Project,frame:number,options?:{width?:number;height?:number}):string{

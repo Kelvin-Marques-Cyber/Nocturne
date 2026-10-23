@@ -5,13 +5,13 @@ import{n,rand,clamp}from'./math';
 export const filterLabels:Record<FilterType,string>={monochrome:'Preto e branco',duotone:'Visão esmeralda',contrast:'Contraste',invert:'Negativo',posterize:'Posterização',bloom:'Difusão de luz',chromatic:'Separação RGB',datamosh:'Ruptura digital',halftone:'Retícula',scanlines:'Varredura analógica',vignette:'Vinheta',letterbox:'Barras de cinema',hazard:'Faixas industriais',hud:'Interface de rastreamento'};
 export const styleLabels:Record<string,string>={'terminal-noir':'Terminal noir',chalk:'Giz',signal:'Sinal vermelho',datamosh:'Sinal corrompido','acid-industrial':'Industrial ácido',emerald:'Esmeralda'};
 export const filter=(type:FilterType,amount:number,id:string=type):FilmFilter=>({id,type,amount,enabled:true});
-interface EffectClock{width:number;height:number;frame:number;seed:number;energy:number;beat:number;focus:number;}
+interface EffectClock{width:number;height:number;frame:number;seed:number;energy:number;beat:number;focus:number;namespace?:string;}
 export function applyEffects(svg:string,filters:FilmFilter[],clock:EffectClock){
  const enabled=filters.filter(f=>f.enabled&&f.amount>0);if(!enabled.length)return svg;
  const{width:w,height:h,frame,seed,energy,beat,focus}=clock,u=Math.min(w,h)/1080,open=svg.indexOf('>')+1;
  let body=svg.slice(open,-6),defs='';
  for(const[findex,f]of enabled.entries()){
-  const id='fx-'+findex,input='fx-source-'+findex,amount=clamp(f.amount),motion=amount*(1-focus*.92);
+  const prefix=clock.namespace?clock.namespace+'-':'',id='fx-'+prefix+findex,input='fx-source-'+prefix+findex,amount=clamp(f.amount),motion=amount*(1-focus*.92);
   const color=(code:string)=>{defs+=`<filter id="${id}" color-interpolation-filters="sRGB" x="-15%" y="-15%" width="130%" height="130%">${code}</filter>`;body=`<g filter="url(#${id})">${body}</g>`;};
   const capture=()=>{body=`<g id="${input}">${body}</g>`;};
   if(f.type==='monochrome')color(`<feColorMatrix type="saturate" values="${n(1-amount)}"/>`);

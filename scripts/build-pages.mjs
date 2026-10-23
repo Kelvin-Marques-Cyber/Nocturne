@@ -11,7 +11,7 @@ for(const args of [['node_modules/typescript/bin/tsc','--noEmit'],['node_modules
 }
 // Only these authored/public assets may enter a deployment. Imported recordings,
 // reference videos, local drafts and the optional large CJK font stay local.
-for(const name of ['demo.json','font.css','DejaVuSansMono.ttf','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'])await copyFile(join('public',name),join('dist',name));
+for(const name of ['demo.json','font.css','DejaVuSansMono.ttf','DejaVuSansMono-Bold.ttf','DejaVuSansMono-Oblique.ttf','DejaVuSans-Bold.ttf','DejaVuSerif.ttf','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'])await copyFile(join('public',name),join('dist',name));
 await mkdir('dist/licenses',{recursive:true});
 for(const [source,target]of [['LICENSE','Apache-2.0.txt'],['THIRD_PARTY_NOTICES.md','NOTICE.txt'],['fonts/LICENSE-DejaVu.txt','DejaVu.txt'],['fonts/LICENSE-NotoCJK.txt','NotoCJK-OFL.txt'],['node_modules/mediabunny/LICENSE','Mediabunny-MPL.txt'],['node_modules/@mediabunny/aac-encoder/LICENSE','AAC-MPL.txt'],['node_modules/opentype.js/LICENSE','OpenType-MIT.txt']])await copyFile(source,'dist/licenses/'+target);
 const files=await readdir('dist',{recursive:true,withFileTypes:true}),shell=files.filter(f=>f.isFile()).map(f=>join(f.parentPath,f.name).replace(/^dist\//,'')).sort();

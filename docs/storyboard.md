@@ -66,3 +66,27 @@ Um close-up é um evento como `{ "type":"focus", "at":23.1, "duration":1.7, "str
 `style.filters` é uma lista ordenada com até 12 camadas. Exemplo: `[{"id":"grade","type":"duotone","amount":0.8,"enabled":true},{"id":"light","type":"bloom","amount":0.4,"enabled":true}]`. Tipos válidos estão em `filterTypes`; cores e valores são validados antes de salvar/renderizar. Filtros de ruptura e interfaces reduzem a interferência durante close-ups, mantendo a palavra legível.
 
 O motor calcula os dois lados da transição por tempo absoluto, inclusive um pequeno trecho de continuação do plano anterior. Não depende de um framebuffer anterior. O browser converte os textos para contornos de glifos antes de rasterizar SVGs e entrega frames com timestamps explícitos ao encoder. O render local usa as mesmas curvas e o mesmo JSON com Sharp/FFmpeg. Rasterizadores podem apresentar pequenas diferenças de antialiasing e blur, mas os eventos e poses não dependem da ordem dos frames.
+
+## Direção expressiva e voz
+
+Campos novos são opcionais; `schemaVersion` permanece 1. Exemplo:
+
+```json
+"performance": {
+  "enabled": true,
+  "camera": "orbit-1",
+  "typography": "sans-0",
+  "gesture": "question-2",
+  "texture": "clean",
+  "rhythm": "accent",
+  "intensity": 0.8,
+  "variation": 0,
+  "followLyrics": true
+}
+```
+
+IDs aceitos vêm de `catalog.ts`. Os eixos descrevem receitas paramétricas: movimentos de câmera, gestos com amplitude/velocidade, faces/tratamentos, texturas/intensidades e ritmos. A contagem é o produto desses eixos; não conta cenas únicas escritas à mão. `directPerformance(project, variation, replan)` seleciona receitas por seed, significado e expressão vocal. Com `replan=false`, preserva os eventos existentes, inclusive correções manuais. `followLyrics=false` fixa o gesto escolhido; `enabled=false` desativa as receitas da cena.
+
+Um evento de frase pode incluir `"delivery":"shout"`; outros valores são `auto`, `neutral`, `whisper`, `rising` e `sustained`. A duração máxima do foco é 12 segundos. O modo automático calcula a expressão com os timestamps atuais das palavras; o modo manual prevalece sobre a estimativa. A frase é projetada como um plano compartilhado, com rotação atrasada em relação à entrada, e suas margens projetadas são enquadradas novamente.
+
+`analysis.voice` contém `source` (`mix` ou `isolated`), `method`, `energy`, `presence`, `pitch` e `confidence`. Todos os arrays têm o mesmo comprimento e usam `analysis.hopSeconds`. Energia, presença e confiança são normalizadas entre 0 e 1; pitch está em Hz, com zero quando indisponível. Os analisadores fornecidos sempre declaram `source: mix`; `isolated` permite integrar futuramente uma faixa de voz preparada externamente, sem prometer separação no aplicativo. Projetos sem esses envelopes usam direção neutra ou a correção manual, sem inventar evidência vocal.

@@ -18,7 +18,7 @@ A licença Apache 2.0 em `LICENSE` cobre o código original do Nocturne. As depe
 | Noto Sans CJK JP, opcional | Japonês, coreano e chinês no filme | SIL OFL 1.1 — `fonts/LICENSE-NotoCJK.txt`; download Sans2.004 com checksum fixo |
 | Mediabunny / @mediabunny/aac-encoder 1.62.1 | MP4 H.264 / AAC no navegador | MPL-2.0; fontes sem alterações nos pacotes npm https://registry.npmjs.org/mediabunny/-/mediabunny-1.62.1.tgz e https://registry.npmjs.org/@mediabunny/aac-encoder/-/aac-encoder-1.62.1.tgz; AAC inclui compilação WASM de FFmpeg/libavcodec e instruções de reconstrução no README do pacote |
 | OpenType.js | Contornos tipográficos no render do navegador | MIT — https://github.com/opentypejs/opentype.js |
-| DejaVu Sans Mono | Tipografia do filme | Licença própria, incluída em `fonts/LICENSE-DejaVu.txt` |
+| DejaVu Sans Mono (regular, bold e oblíqua), Sans Bold e Serif | Cinco faces tipográficas e métricas do filme, distribuídas offline | Licença DejaVu/Bitstream, incluída em `fonts/LICENSE-DejaVu.txt`; https://dejavu-fonts.github.io/ |
 
 O renderizador principal usa Sharp e FFmpeg; nenhuma assinatura ou serviço pago é necessário. Remotion tem critérios próprios de uso gratuito e licenciamento empresarial. Não é apresentado aqui como uma dependência integralmente Apache nem como uma licença de código aberto sem restrições.
 

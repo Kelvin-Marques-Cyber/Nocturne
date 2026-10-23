@@ -6,6 +6,7 @@ import {planLyricFocus} from './focus';
 import {analyzeMeaning,wordEmphasis} from './semantics';
 import {tokenizeLyrics,type Language} from './language';
 import {directTransitions} from './transitions';
+import {directPerformance} from './director';
 export const metaphors:Record<SceneKind,{label:string;intent:string;code:string;action:Action;accent:string}>= {
  constellation:{label:'Mapa do invisível',intent:'As estrelas se conectam ao pequeno coração; a escala do céu revela a fragilidade humana.',code:'const céu = conectar(estrelas);',action:'reach',accent:'CONSTELAÇÕES'},
  heart:{label:'O que está dentro',intent:'O peito vira uma janela de código e o coração permanece visível mesmo atrás do corpo.',code:'Deus.vê(coração);',action:'hold',accent:'CORAÇÕES'},
@@ -99,8 +100,8 @@ export function createStoryboard(lyrics:string,words:Word[],a:Analysis,language:
    directed.push({...s,end:hit,wordIds:ws.filter(w=>w.start<hit).map(w=>w.id),kind:i%2?'television':'terminal',title:'Antes da recusa',transition:i%2?'channel':'cut',motions:[{action:'hesitate',start:s.start,end:hit}],events:s.events.filter(e=>e.at<hit)},{...s,start:hit,wordIds:ws.filter(w=>w.start>=hit).map(w=>w.id),camera:{...s.camera,zoomFrom:1.08+i%3*.06,zoomTo:1.23,roll:Math.sin(i)*4},transition:'burn',motions:motions('denial',hit,s.end),events:s.events.filter(e=>e.at>=hit)});
   }else directed.push(s);
  }
- return planLyricFocus(directTransitions(directed.map((s,i)=>({...s,id:`s${i}`})),a),words,language);
+ return planLyricFocus(directTransitions(directed.map((s,i)=>({...s,id:`s${i}`})),a),words,language,a);
 }
 export function makeProject(input:{title:string;artist?:string;audio:string;lyrics:string;analysis:Analysis;words:Word[];alignment:Project['alignment'];language?:Language}):Project {
- return{schemaVersion:1,id:'project-'+Date.now().toString(36),title:input.title,artist:input.artist??'Kelvin',language:input.language??'auto',seed:4271,duration:input.analysis.duration,audio:input.audio,lyrics:input.lyrics,fps:30,format:'vertical',analysis:input.analysis,words:input.words,scenes:createStoryboard(input.lyrics,input.words,input.analysis,input.language),character:{name:'Testemunha',stroke:'#e9e5dc',thickness:3.2,scale:1,head:1,heart:true},style:{...styles['terminal-noir']},alignment:input.alignment};
+ return directPerformance({schemaVersion:1,id:'project-'+Date.now().toString(36),title:input.title,artist:input.artist??'Kelvin',language:input.language??'auto',seed:4271,duration:input.analysis.duration,audio:input.audio,lyrics:input.lyrics,fps:30,format:'vertical',analysis:input.analysis,words:input.words,scenes:createStoryboard(input.lyrics,input.words,input.analysis,input.language),character:{name:'Testemunha',stroke:'#e9e5dc',thickness:3.2,scale:1,head:1,heart:true},style:{...styles['terminal-noir']},alignment:input.alignment},0,false);
 }

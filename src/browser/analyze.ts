@@ -7,11 +7,30 @@ function fft(re:Float32Array,im:Float32Array){
  for(let len=2;len<=N;len<<=1){const angle=-2*Math.PI/len,wr=Math.cos(angle),wi=Math.sin(angle);for(let start=0;start<N;start+=len){let ur=1,ui=0;for(let j=0;j<len/2;j++){const a=start+j,b=a+len/2,vr=re[b]*ur-im[b]*ui,vi=re[b]*ui+im[b]*ur;re[b]=re[a]-vr;im[b]=im[a]-vi;re[a]+=vr;im[a]+=vi;const next=ur*wr-ui*wi;ui=ur*wi+ui*wr;ur=next;}}}
 }
 const normalize=(values:number[])=>{const sorted=[...values].sort((a,b)=>a-b),top=sorted[Math.floor(sorted.length*.97)]||1;return values.map(v=>Number(clamp(v/top).toFixed(4)));};
+// Autocorrelation from the power spectrum. Confidence measures periodicity,
+// not speaker identity: instruments in a mixed song can also be periodic.
+function pitchEstimate(real:Float32Array,imag:Float32Array,sr:number):[number,number]{
+ const size=real.length,re=new Float32Array(size),im=new Float32Array(size);
+ for(let i=0;i<size;i++)re[i]=real[i]*real[i]+imag[i]*imag[i];fft(re,im);
+ const zero=re[0];if(zero<1e-8)return[0,0];
+ let lag=0,best=0;
+ for(let i=Math.max(2,Math.ceil(sr/700));i<Math.min(size/2,Math.floor(sr/75));i++){
+  const strength=re[i]/zero,score=strength*(1-i/size*.45);
+  if(strength>.36&&re[i]>re[i-1]&&re[i]>=re[i+1]&&score>best){best=score;lag=i;}
+ }
+ if(!lag)return[0,0];
+ const denominator=re[lag-1]-2*re[lag]+re[lag+1],refined=lag+(Math.abs(denominator)>1e-8?clamp(.5*(re[lag-1]-re[lag+1])/denominator,-.5,.5):0);
+ return[Number((sr/refined).toFixed(2)),Number(clamp(re[lag]/zero).toFixed(4))];
+}
 export function analyzeSamples(samples:Float32Array,sampleRate:number):Analysis{
- const hop=Math.round(sampleRate*.02),size=1024,dt=hop/sampleRate,N=Math.ceil(samples.length/hop),energy:number[]=[],low:number[]=[],high:number[]=[],flux:number[]=[],re=new Float32Array(size),im=new Float32Array(size),last=new Float32Array(size/2);
+ const hop=Math.round(sampleRate*.02),size=2048,dt=hop/sampleRate,N=Math.ceil(samples.length/hop),energy:number[]=[],low:number[]=[],high:number[]=[],flux:number[]=[],mid:number[]=[],presence:number[]=[],pitch:number[]=[],confidence:number[]=[],re=new Float32Array(size),im=new Float32Array(size),last=new Float32Array(size/2);
  for(let f=0;f<N;f++){
-  let rms=0;for(let i=0;i<size;i++){const v=samples[f*hop+i]??0;re[i]=v*(.5-.5*Math.cos(2*Math.PI*i/(size-1)));im[i]=0;rms+=v*v;}energy.push(Math.sqrt(rms/size));fft(re,im);
-  let bass=0,treble=0,novelty=0,mass=0;for(let i=2;i<size/2;i++){const hz=i*sampleRate/size,value=Math.log1p(Math.hypot(re[i],im[i]));mass+=value;novelty+=Math.max(0,value-last[i]);last[i]=value;if(hz<250)bass+=value;if(hz>2200&&hz<8000)treble+=value;}low.push(bass);high.push(treble);flux.push(novelty/Math.max(1e-9,mass));
+  let rms=0;for(let i=0;i<size;i++){const v=samples[f*hop+i-size/2]??0;re[i]=v*(.5-.5*Math.cos(2*Math.PI*i/(size-1)));im[i]=0;rms+=v*v;}energy.push(Math.sqrt(rms/size));fft(re,im);
+  let bass=0,treble=0,novelty=0,mass=0,vocalPower=0,totalPower=0;
+  for(let i=2;i<size/2;i++){const hz=i*sampleRate/size,power=re[i]*re[i]+im[i]*im[i],value=Math.log1p(Math.sqrt(power));mass+=value;novelty+=Math.max(0,value-last[i]);last[i]=value;totalPower+=power;if(hz>=120&&hz<3500)vocalPower+=power;if(hz<250)bass+=value;if(hz>2200&&hz<8000)treble+=value;}
+  low.push(bass);high.push(treble);flux.push(novelty/Math.max(1e-9,mass));mid.push(Math.sqrt(vocalPower));
+  const fraction=vocalPower/Math.max(1e-9,totalPower),[hz,periodicity]=pitchEstimate(re,im,sampleRate);
+  presence.push(Number(clamp(fraction).toFixed(4)));pitch.push(fraction>.18?hz:0);confidence.push(Number((periodicity*clamp(fraction*1.5)).toFixed(4)));
  }
  const env=normalize(energy),onset=normalize(flux),lo=normalize(low),hi=normalize(high),onsets:number[]=[];
  for(let i=2;i<N-2;i++){const from=Math.max(0,i-18),to=Math.min(N,i+19),mean=onset.slice(from,to).reduce((n,x)=>n+x,0)/(to-from);if(flux[i]>.012&&onset[i]>Math.max(.16,mean*1.5)&&onset[i]>=onset[i-1]&&onset[i]>onset[i+1]&&i*dt-(onsets.at(-1)??-1)>.1)onsets.push(Number((i*dt).toFixed(4)));}
@@ -22,5 +41,5 @@ export function analyzeSamples(samples:Float32Array,sampleRate:number):Analysis{
  const ranges=(predicate:(i:number)=>boolean,min:number)=>{const out:{start:number;end:number}[]=[];let start=-1;for(let i=0;i<=N;i++){if(i<N&&predicate(i)){if(start<0)start=i;}else if(start>=0){if((i-start)*dt>=min)out.push({start:start*dt,end:Math.min(duration,i*dt)});start=-1;}}return out;};
  const silences=ranges(i=>energy[i]<.0035,.18),vocalRegions=ranges(i=>env[i]>.16&&hi[i]>.14,.3).map(s=>({...s,confidence:.25}));
  const boundaries=[0];for(let i=Math.round(3/dt);i<N-Math.round(2/dt);i+=Math.round(.5/dt)){const span=Math.round(1.5/dt),left=env.slice(i-span,i).reduce((a,b)=>a+b,0)/span,right=env.slice(i,i+span).reduce((a,b)=>a+b,0)/span;if(Math.abs(right-left)>.22&&i*dt-boundaries.at(-1)!>4)boundaries.push(i*dt);}boundaries.push(duration);
- return{duration,sampleRate,hopSeconds:dt,bpm,tempoConfidence:rhythmic?clamp(best>.005?.4+(best-second)/best:0,0,.85):0,beats,onsets,impacts:onsets.filter(t=>onset[Math.round(t/dt)]>.7),energy:env,low:lo,high:hi,silences,vocalRegions,sections:boundaries.slice(0,-1).map((start,i)=>{const end=boundaries[i+1],slice=env.slice(Math.floor(start/dt),Math.ceil(end/dt));return{start,end,energy:slice.reduce((a,b)=>a+b,0)/Math.max(1,slice.length)};}),method:'browser STFT + spectral flux + autocorrelation (no speech recognition)',warnings:['BPM pode ter ambiguidade de metade/dobro.','Regiões vocais são candidatos espectrais, não detecção de voz separada.','Tempos da letra exigem ASR importado ou ajuste manual.']};
+ return{duration,sampleRate,hopSeconds:dt,bpm,tempoConfidence:rhythmic?clamp(best>.005?.4+(best-second)/best:0,0,.85):0,beats,onsets,impacts:onsets.filter(t=>onset[Math.round(t/dt)]>.7),energy:env,low:lo,high:hi,voice:{source:'mix',method:'120–3500 Hz energy + spectral autocorrelation; mixed-track estimate',energy:normalize(mid),presence,pitch,confidence},silences,vocalRegions,sections:boundaries.slice(0,-1).map((start,i)=>{const end=boundaries[i+1],slice=env.slice(Math.floor(start/dt),Math.ceil(end/dt));return{start,end,energy:slice.reduce((a,b)=>a+b,0)/Math.max(1,slice.length)};}),method:'browser STFT + spectral flux + autocorrelation (no speech recognition)',warnings:['BPM pode ter ambiguidade de metade/dobro.','Regiões vocais são candidatos espectrais, não detecção de voz separada.','Expressão e altura vocais são estimativas da mistura; instrumentos podem interferir.','Tempos da letra exigem ASR importado ou ajuste manual.']};
 }

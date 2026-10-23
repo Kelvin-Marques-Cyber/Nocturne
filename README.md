@@ -19,6 +19,9 @@ Esta é uma primeira implementação funcional. O planejamento automático utili
 - Televisão construída com vértices 3D, projeção perspectiva e palavras projetadas na superfície da tela. Chiado, varredura, antenas, botões, volume e movimento de câmera são procedurais.
 - 17 transições com duração ligada ao BPM: corte, obturador, tinta, dissolução real, troca de canal, íris, whip pan, queima, mergulho, planos divididos, fragmentação, película vertical, onda circular, varredura CRT, diafragma, reescrita e travessia de profundidade.
 - Zooms semânticos por palavra/frase: a câmera entra na letra ou na TV; o cenário e o personagem saem do quadro durante o close-up. Os eventos acompanham o `wordId` quando os tempos são editados.
+- Frases inteiras em um plano com perspectiva, rotação 3D sutil e enquadramento protegido nos formatos vertical e horizontal. Gritos têm ataque rápido e recuperação; trechos suaves, crescendos e notas sustentadas recebem envelopes distintos.
+- Direção expressiva: 36 receitas de câmera, 48 gestos, 20 tratamentos tipográficos com cinco faces DejaVu, 43 texturas e seis ritmos. O produto desses eixos oferece **8.916.480 combinações de presets**, geradas por seed e editáveis; não são milhões de animações desenhadas individualmente.
+- O corpo interpreta dúvida, recusa, súplica, escuta, proteção e outras intenções com preparação e mistura entre frases. Gestos usam o tronco superior e preservam pés e mãos que sustentam objetos; não são ciclos de dança.
 - Seis estilos e 14 filtros combináveis: noir, giz, sinal, corrupção digital, industrial ácido e esmeralda. Camadas têm intensidade, ordem e ativação próprias.
 - Vocabulário narrativo em português, inglês, espanhol, japonês, coreano, russo, francês, alemão, italiano e chinês, com evidência das palavras reconhecidas no Inspector.
 - PWA estático para GitHub Pages: importação, análise STFT em worker, edição e MP4 H.264/AAC no navegador com WebCodecs. Arquivos de áudio ficam no IndexedDB do aparelho.
@@ -142,6 +145,18 @@ O áudio é decodificado sem a capa incorporada ao MP3. A duração do exemplo �
 6. Salve o JSON. O navegador também guarda um rascunho local; o arquivo baixado e sua música são o conjunto portátil do projeto.
 7. Exporte toda a faixa, a cena selecionada ou 15 segundos a partir do cursor. O botão Baixar MP4 aparece quando o encoder termina.
 
+### Frases, gritos e interpretação vocal
+
+Em **Direção expressiva**, use **Automatizar direção da música** para planejar câmera, gestos, tipografia e texturas. **Nova combinação** muda a variação mantendo os eventos manuais. Todos os controles participam do Desfazer e são salvos no JSON.
+
+Selecione uma palavra e use **Focar frase selecionada**. O seletor **Entonação / interpretação** oferece Automática, Natural, Grito / ênfase forte, Suave / íntima, Crescendo e Nota sustentada. Assim, “Eu não sei” pode ganhar uma aproximação rápida quando gritado e um movimento mais contido quando cantado suavemente. Selecionar uma interpretação cria uma correção manual ancorada à frase.
+
+A análise nova guarda energia na faixa de 120–3500 Hz, presença espectral, altura provável e periodicidade na mesma grade temporal do áudio. A decisão usa as janelas ocupadas pela letra e a intensidade relativa da gravação; letras maiúsculas ou uma batida forte, sozinhas, não identificam grito. O Inspector apresenta origem e confiança.
+
+**Essa leitura é uma estimativa da mistura musical.** Guitarras, coros, compressão e percussão podem interferir. Não há separação automática de voz nem um classificador treinado de emoções. Revise os resultados e use a correção manual quando necessário. O exemplo e projetos antigos continuam abrindo; reimporte a gravação para obter os novos contornos vocais, pois a análise antiga não contém esses dados e a música pessoal não é distribuída.
+
+As cinco faces latinas acompanham o PWA e o renderizador local. A primeira preparação de CJK mantém o fluxo opcional já documentado. `node --import tsx scripts/prepare-film-fonts.ts` regenera as métricas das faces distribuídas.
+
 Áudios importados, rascunhos, renders e dependências estão no `.gitignore`. O servidor foi construído como ferramenta local, sem contas, autenticação, fila distribuída ou hospedagem multiusuário. Não o exponha como serviço público sem implementar essa camada.
 
 ## JSON e módulos
@@ -154,6 +169,9 @@ O projeto possui `schemaVersion`, `seed`, `duration`, `audio`, `lyrics`, `analys
 | `src/engine/math.ts` | Interpolação, easing, amostragem, ruído com seed e IK. |
 | `src/engine/language.ts` / `semantics.ts` | Segmentação Unicode, medidas de texto, vocabulário e conceitos multilíngues. |
 | `src/engine/focus.ts` | Seleção, envelopes e enquadramento dos close-ups tipográficos. |
+| `src/engine/voice.ts` | Expressão vocal estimada por frase, picos e correções manuais. |
+| `src/engine/catalog.ts` / `director.ts` | Catálogos combináveis e seleção narrativa determinística. |
+| `src/engine/expression.ts` / `typography.ts` | Gestos contínuos e métricas das faces tipográficas. |
 | `src/engine/transitions.ts` / `effects.ts` | Composição entre planos e pilha de filtros determinísticos. |
 | `src/browser/` | Análise em worker, IndexedDB, contornos das fontes e MP4 com WebCodecs/AAC WASM. |
 | `src/engine/rig.ts` | Corpo, poses e mistura entre movimentos. |
