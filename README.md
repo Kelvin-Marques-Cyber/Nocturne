@@ -10,6 +10,8 @@ Esta é uma primeira implementação funcional. O planejamento automático utili
 
 ## O que já funciona
 
+- O modo reel monta sequências por frases: tipografia em planos com acompanhamento e revelação do conjunto, janelas sobrepostas, diálogos com antecipação e resposta do personagem, e ambientes com seus próprios objetos. Instrumentos, como guitarra e piano, chegam aos renderizadores físicos também nesse modo.
+- As palavras entram pelos timestamps importados; o planejamento visual não altera a sincronização. A câmera gira em uma batida escolhida por sequência, com resposta à entonação vocal e às notas sustentadas. Frases comuns conservam o personagem; o foco manual continua disponível.
 - Importação de MP3, WAV e FLAC, edição da letra e importação/exportação de projetos JSON.
 - Análise local de ataques, BPM provável, batidas, envelopes de energia, silêncios e mudanças prováveis de seção.
 - Alinhamento por âncoras ASR com correspondência monotônica; trechos ausentes recebem interpolação explicitamente sinalizada.

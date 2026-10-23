@@ -25,7 +25,8 @@ export function directPerformance(project:Project,variation=0,replan=true):Proje
   const cameraPool=cameraRecipes.filter(c=>allowed.includes(c.id.split('-')[0]));
   const pick=<T extends{id:string}>(pool:T[],salt:number,last='')=>{let i=Math.floor(rand(seed+salt)*pool.length);if(pool.length>1&&pool[i].id===last)i=(i+1)%pool.length;return pool[i];};
   const camera=pick(cameraPool,13,previousCamera),typePool=shout?typographyRecipes.filter(t=>t.face.weight===700&&!t.outline):typographyRecipes;
-  const type=pick(project.direction==='reel'?typePool.filter(type=>type.face.id.startsWith('mono')&&!type.outline):typePool,29,previousType),gesturePool=gestureRecipes.filter(g=>g.kind===semanticGesture(text));
+  const reelFaces=shout?['sans','mono-bold','lm-sans-bold']:gentle?['mono','lm-light','lm-sans','sans-book']:['mono','mono-bold','sans','lm-sans-bold','lm-condensed'];
+  const type=pick(project.direction==='reel'?typePool.filter(type=>reelFaces.includes(type.face.id)&&!type.outline):typePool,29,previousType),gesturePool=gestureRecipes.filter(g=>g.kind===semanticGesture(text));
   const gesture=pick(gentle?gesturePool.slice(0,2):shout?gesturePool.slice(2):gesturePool,47);
   const texturePool=textureRecipes.filter(t=>gentle?['clean','vignette-0','bloom-0','monochrome-0','sepia-0','lightleak-0','dust-0'].includes(t.id):!['invert','hazard','hud','letterbox','thermal','solarize','ink','emboss'].includes(t.type));
   const texture=pick(project.direction==='reel'?texturePool.filter(t=>['clean','scanlines-0','chromatic-0','dust-0','softfocus-0'].includes(t.id)):texturePool,83,previousTexture),rhythm=rhythmRecipes.find(r=>r.id===(shout?'accent':delivery.kind==='rising'?'swelling':delivery.kind==='sustained'?'suspended':gentle?'breath':index%2?'legato':'accent'))!;

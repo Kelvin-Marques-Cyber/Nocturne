@@ -13,7 +13,7 @@ import {expressivePose} from './expression';
 import {textureRecipes} from './catalog';
 import {beatAccents,beatResponse} from './beat';
 import {stageWorlds} from './stage';
-import {codeTheatre} from './code-theatre';
+import {renderReelStage} from './reel-stage';
 import {libraryWorlds} from './world-library';
 
 export function sceneAt(p:Project,t:number){return p.scenes.find(s=>t>=s.start&&t<s.end)??(t<p.scenes[0].start?p.scenes[0]:p.scenes.at(-1)!);}
@@ -286,13 +286,22 @@ function context(p:Project,s:Scene,t:number):Ctx{
 }
 function sceneLayer(c:Ctx,frame:number,id:string){
  const{p,s,t,local,q,w,h,u,energy,impact}=c,focus=evaluateLyricFocus(p,s,t),a=focus?.amount??0,visibility=1-smooth(a/.94);
+ if(p.direction==='reel'){
+  // Reels stage phrases in their own space. Native worlds keep their props;
+  // their old thematic labels give way to the supplied sung words.
+  let out=renderReelStage(c,()=>worlds[s.kind]({...c,s:{...s,accent:''},words:c.words.filter(word=>word.start<=t)}));
+  const manual=focus&&(focus.event.source==='manual'||focus.event.source===undefined&&(focus.event.delivery!==undefined||focus.event.focusMode==='word'&&focus.event.duration===1.7));
+  if(manual)out=(a<.999?`<g opacity="${n(1-smooth(a/.94))}">${out}</g>`:'')+renderLyricFocus(p,s,t,w,h,focus);
+  const texture=s.performance?.enabled?textureRecipes.find(r=>r.id===s.performance?.texture):undefined;
+  if(texture?.amount){const filtered=applyEffects(`<svg>${out}</svg>`,[{id:'performance',type:texture.type,amount:texture.amount*(s.performance?.intensity??1),enabled:true}],{width:w,height:h,frame,seed:p.seed,energy,beat:c.beat,focus:manual?a:0,namespace:id});return filtered.slice(filtered.indexOf('>')+1,-6);}
+  return out;
+ }
  const z=mix(s.camera.zoomFrom,s.camera.zoomTo,smooth(q)),shake=impact*s.camera.shake*4*u*(1-a);
  const dx=s.camera.panX*smooth(q)*u+Math.sin(t*47.3)*shake,dy=s.camera.panY*smooth(q)*u+Math.sin(t*53.7)*shake*.6;
  const roll=s.camera.roll*Math.sin(Math.PI*q)*(1-a);
  let world='';
  if(visibility>.001){
-  const theatre=p.direction==='reel'&&!['television','tunnel3d','ocean','cross','home','table','hands','abyss','valley'].includes(s.kind);
-  world=theatre?codeTheatre(c):worlds[s.kind](c);
+  world=worlds[s.kind](c);
   world=`<g transform="translate(${n(w/2+dx)} ${n(h*.52+dy)}) rotate(${n(roll)}) scale(${n(z)}) translate(${n(-mix(w*.5,w*(s.camera.focusX??.5),smooth(q)))} ${n(-mix(h*.52,h*(s.camera.focusY??.52),smooth(q)))})">${world}</g>`;
   if(a>0){
    const center:Point=s.kind==='television'?projector(w,h,.32+Math.sin(local*.34+s.variant)*.22,-.08+Math.sin(local*.2)*.04,1030,1100)([-67.5,-3,125]):[w*.5,h*.74];
@@ -303,7 +312,7 @@ function sceneLayer(c:Ctx,frame:number,id:string){
  let out=`<circle cx="${w*.35}" cy="${h*.46}" r="${w*.63}" fill="url(#red-haze)" opacity="${n((.4+energy*.3)*visibility)}"/><g id="${id}" opacity="${n(visibility)}">${world}</g>`;
  const glitch=Math.max(impact,...s.events.filter(e=>e.type==='glitch').map(e=>pulse(t,e.at,.1)*e.strength))*p.style.glitch*(1-a);
  if(glitch>.11){const offset=(rand(frame+p.seed)-.5)*24*glitch*u;out+=`<g clip-path="url(#slice)"><rect width="${w}" height="${h}" fill="${p.style.background}"/><use xlink:href="#${id}" transform="translate(${n(offset)} 0)"/></g>`;}
- if(a<.9&&s.kind!=='television'&&p.direction!=='reel')out+=`<g opacity="${n(1-smooth(a/.45))}">${captions(c)}</g>`;
+ if(a<.9&&s.kind!=='television')out+=`<g opacity="${n(1-smooth(a/.45))}">${captions(c)}</g>`;
  if(a<.99){
   out+=`<g opacity="${n(1-smooth(a/.7))}">`;
   out+=txt(p.title.toLowerCase().replace(/\s+/g,'_')+'.ts',w*.075,h*.086,15*u,c.fg,'opacity=".6"');
@@ -314,7 +323,7 @@ function sceneLayer(c:Ctx,frame:number,id:string){
   out+=txt(code,w*.075,h*.907,Math.min(18*u,w*.85/Math.max(1,textWidth(code))),c.fg,'opacity=".58"');
   out+=txt(p.artist.toUpperCase(),w*.075,h*.946,11*u,c.fg,'opacity=".28"')+txt('●  '+(p.duration-t<3?'END':'REC'),w*.82,h*.946,11*u,c.accent,'opacity=".55"')+'</g>';
  }
- if(p.direction!=='reel')out+=beatAccents(p,s,t,w,h,a);
+ out+=beatAccents(p,s,t,w,h,a);
  if(focus)out+=renderLyricFocus(p,s,t,w,h,focus);
  const exposure=Math.max(0,...s.events.filter(e=>e.type==='flash').map(e=>pulse(t,e.at,e.duration*.35)*e.strength));
  if(exposure>.01)out+=`<rect width="${w}" height="${h}" fill="${c.fg}" opacity="${n(clamp(exposure)*.28*(1-a))}"/>`;
@@ -339,6 +348,5 @@ export function renderFrame(p:Project,frame:number,options?:{width?:number;heigh
  const filtered=applyEffects(out+'</svg>',p.style.filters??[],{width:w,height:h,frame,seed:p.seed,energy:c.energy,beat:c.beat,focus:a});
  // These scenic worlds use thematic labels rather than the sung lyric. Keep
  // the actual words legible above their filters, including during transitions.
- if(p.direction==='reel'&&['ocean','cross','home','table','hands','abyss','valley'].includes(s.kind)&&a<.9)return filtered.slice(0,-6)+captions({...c,words:p.words})+'</svg>';
  return filtered;
 }
