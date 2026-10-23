@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Kelvin e Silva Marques
 import type{Analysis,Project,Scene}from'./model';
-import{pulse,nearestBefore,clamp,n,sample}from'./math';
-export function beatResponse(a:Analysis,t:number){return clamp(Math.max(pulse(t,nearestBefore(a.beats,t),.11)*clamp(.4+a.tempoConfidence),pulse(t,nearestBefore(a.impacts,t),.075)*.75));}
+import{pulse,nearestBefore,clamp,n,sample,smooth}from'./math';
+export function beatResponse(a:Analysis,t:number){
+ const strength=(at:number,decay:number)=>{
+  if(!Number.isFinite(at)||t<at)return 0;
+  const band=(values:number[])=>Math.max(sample(values,a.hopSeconds,at-.025),sample(values,a.hopSeconds,at),sample(values,a.hopSeconds,at+.025));
+  const level=clamp(band(a.energy)*.4+band(a.low)*.45+band(a.high)*.15);
+  return pulse(t,at,decay)*smooth((t-at)/.018)*level;
+ };
+ return clamp(Math.max(strength(nearestBefore(a.beats,t),.11)*clamp(.4+a.tempoConfidence),strength(nearestBefore(a.impacts,t),.075)*.85));
+}
 export function beatAccents(p:Project,s:Scene,t:number,w:number,h:number,focus:number){
  if(!s.performance?.enabled)return'';
  const strength=beatResponse(p.analysis,t)*(s.performance.beatSync??.65)*s.performance.intensity;if(strength<.002)return'';

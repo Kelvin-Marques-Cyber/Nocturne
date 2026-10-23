@@ -153,6 +153,8 @@ Selecione uma palavra e use **Focar frase selecionada**. O seletor **Entonação
 
 A análise nova guarda energia na faixa de 120–3500 Hz, presença espectral, altura provável e periodicidade na mesma grade temporal do áudio. A decisão usa as janelas ocupadas pela letra e a intensidade relativa da gravação; letras maiúsculas ou uma batida forte, sozinhas, não identificam grito. O Inspector apresenta origem e confiança.
 
+Os acentos de batida combinam a energia geral com graves e agudos no instante do ataque. Batidas fortes e fracas produzem respostas diferentes; uma marca estimada da grade em um trecho silencioso não aciona o efeito. A entrada do pulso é suavizada para evitar saltos bruscos da câmera.
+
 **Essa leitura é uma estimativa da mistura musical.** Guitarras, coros, compressão e percussão podem interferir. Não há separação automática de voz nem um classificador treinado de emoções. Revise os resultados e use a correção manual quando necessário. O exemplo e projetos antigos continuam abrindo; reimporte a gravação para obter os novos contornos vocais, pois a análise antiga não contém esses dados e a música pessoal não é distribuída.
 
 As cinco faces latinas acompanham o PWA e o renderizador local. A primeira preparação de CJK mantém o fluxo opcional já documentado. `node --import tsx scripts/prepare-film-fonts.ts` regenera as métricas das faces distribuídas.
@@ -245,7 +247,7 @@ npm run deploy
 
 Esse comando compila, cria um checkout temporário, preserva o histórico existente de `gh-pages` e faz push normal, rejeitando alterações concorrentes. No GitHub, em **Settings → Pages → Build and deployment**, selecione **Deploy from a branch → gh-pages → / (root)**. Não exige GitHub Actions.
 
-Abra o endereço HTTPS publicado e use Instalar app quando o navegador oferecer a opção; no iPhone, use Compartilhar → Adicionar à Tela de Início. O shell é guardado após o primeiro acesso; músicas importadas ficam no IndexedDB. Atualizações do app são ativadas depois que as abas antigas são fechadas. Salve o JSON como cópia portátil; apagar dados do site remove os arquivos locais.
+Abra o endereço HTTPS publicado e use Instalar app quando o navegador oferecer a opção; no iPhone, use Compartilhar → Adicionar à Tela de Início. O shell é guardado após o primeiro acesso; músicas importadas ficam no IndexedDB. Quando uma nova versão estiver pronta, o botão **Atualizar app** salva imediatamente o projeto e recarrega o aplicativo. Ele fica indisponível durante análise ou exportação. Uma geração anterior do cache é preservada para outras abas abertas; a versão ativa tem prioridade para os arquivos atuais e a navegação offline. Salve o JSON como cópia portátil; apagar dados do site remove os arquivos locais.
 
 A exportação no PWA precisa de um navegador com encoder WebCodecs H.264 disponível. O áudio AAC tem fallback WASM local. A aplicação verifica o suporte e informa quando é necessário usar Chrome/Edge compatível ou o renderizador FFmpeg. Uma prévia HTTP em host não confiável não oferece instalação nem WebCodecs; GitHub Pages usa HTTPS. A duração segue os samples de áudio e os timestamps de cada frame, sem captura da tela em tempo real.
 
