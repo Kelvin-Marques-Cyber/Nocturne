@@ -1,6 +1,6 @@
 {
   "name": "nocturne-studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
@@ -14,9 +14,17 @@
     "project": "node --import tsx scripts/prepare.ts",
     "render": "node --import tsx scripts/render.ts",
     "verify": "node --import tsx scripts/verify.ts",
-    "remotion:studio": "remotion studio src/remotion/index.tsx"
+    "remotion:studio": "remotion studio src/remotion/index.tsx",
+    "fonts": "python3 scripts/fonts.py",
+    "build:pages": "node scripts/build-pages.mjs",
+    "preview:pages": "node scripts/serve-pages.mjs",
+    "deploy": "node scripts/deploy-pages.mjs",
+    "check:pages": "node scripts/check-pages.mjs"
   },
   "dependencies": {
+    "@mediabunny/aac-encoder": "^1.62.1",
+    "mediabunny": "^1.62.1",
+    "opentype.js": "^2.0.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "remotion": "4.0.374",
@@ -25,6 +33,7 @@
   "devDependencies": {
     "@remotion/cli": "4.0.374",
     "@types/node": "24.7.2",
+    "@types/opentype.js": "^1.3.10",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "tsx": "4.20.6",

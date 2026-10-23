@@ -2,6 +2,7 @@
 // Copyright 2026 Kelvin e Silva Marques
 import{n,pt,esc,rand,clamp,easeOut}from'./math';
 import type{Point,Word}from'./model';
+import{filmFont,textWidth,glyphWidth}from'./language';
 type V3=[number,number,number];
 export interface Space {width:number;height:number;time:number;local:number;seed:number;accent:string;fg:string;words:Word[];variant:number;energy:number;beat:number;}
 export function projector(width:number,height:number,yaw:number,pitch:number,distance=1050,focal=1050){
@@ -16,8 +17,8 @@ const edge=(p:(v:V3)=>Point,a:V3,b:V3,color:string,op=.4)=>`<path d="M${pt(p(a))
 function text3d(p:(v:V3)=>Point,text:string,x:number,y:number,z:number,size:number,color:string,opacity=1){
  return [...text].map((char,i)=>{
   if(!char.trim())return'';
-  const at:V3=[x+i*size*.61,y,z],origin=p(at),dx=p([at[0]+1,at[1],z]),dy=p([at[0],at[1]+1,z]);
-  return`<g transform="matrix(${n(dx[0]-origin[0])} ${n(dx[1]-origin[1])} ${n(dy[0]-origin[0])} ${n(dy[1]-origin[1])} ${pt(origin)})"><text font-family="DejaVu Sans Mono,monospace" font-size="${size}" fill="${color}" opacity="${n(opacity)}">${esc(char)}</text></g>`;
+  const at:V3=[x+textWidth([...text].slice(0,i).join(''))*size,y,z],origin=p(at),dx=p([at[0]+1,at[1],z]),dy=p([at[0],at[1]+1,z]);
+  return`<g transform="matrix(${n(dx[0]-origin[0])} ${n(dx[1]-origin[1])} ${n(dy[0]-origin[0])} ${n(dy[1]-origin[1])} ${pt(origin)})"><text font-family="${filmFont}" font-size="${size}" fill="${color}" opacity="${n(opacity)}">${esc(char)}</text></g>`;
  }).join('');
 }
 function disk(p:(v:V3)=>Point,x:number,y:number,z:number,r:number,fill:string,stroke:string){return quad(p,Array.from({length:24},(_,i)=>[x+Math.cos(i/24*Math.PI*2)*r,y+Math.sin(i/24*Math.PI*2)*r,z]as V3),fill,stroke);}
@@ -51,7 +52,7 @@ export function television3D(c:Space){
  const shown=lines.slice(Math.max(0,current-1),Math.max(0,current-1)+3);
  let row=0;
  for(const li of shown){const ws=c.words.filter(w=>w.line===li);let x=sx+24,y=sy+100+row*70;
-  for(const w of ws){const size=li===active?.line?23:16,length=(w.text.length+1)*size*.61;if(x+length>sx+sw-20){y+=32;x=sx+24;}
+  for(const w of ws){const size=li===active?.line?23:16,length=(textWidth(w.text)+.61)*size;if(x+length>sx+sw-20){y+=32;x=sx+24;}
    const color=active?.id===w.id?c.accent:c.fg,opacity=li===active?.line?(t>=w.start?1:.2):.25;
    out+=text3d(p,w.text,x,y,sz+2,size,color,opacity);x+=length;
   }row++;

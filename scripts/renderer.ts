@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Kelvin e Silva Marques
+import {ensureProjectFonts} from './font-support';
 import {rasterize} from '../src/engine/raster';
 import {spawn,execFileSync} from 'node:child_process';
 import {once} from 'node:events';
@@ -11,7 +12,7 @@ import {renderFrame} from '../src/engine/frame';
 export interface RenderOptions {from?:number;duration?:number;output:string;width?:number;height?:number;crf?:number;preset?:string;onProgress?:(value:{frame:number;total:number;percent:number;elapsed:number})=>void;signal?:AbortSignal;}
 const positive=(x:number)=>Number.isFinite(x)&&x>0;
 export async function renderVideo(project:Project,opts:RenderOptions){
- validateProject(project);
+ validateProject(project);await ensureProjectFonts(project);
  const from=opts.from??0,duration=Math.min(opts.duration??project.duration,project.duration-from);
  if(!Number.isFinite(from)||from<0||from>=project.duration||!positive(duration))throw Error('Trecho de renderização inválido.');
  const {width,height}=dimensions(project.format),ww=opts.width??width,hh=opts.height??height;

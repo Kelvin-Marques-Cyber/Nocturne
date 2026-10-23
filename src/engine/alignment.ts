@@ -2,19 +2,19 @@
 // Copyright 2026 Kelvin e Silva Marques
 import type {Analysis,Word} from './model';
 import {normalize} from './model';
+import {tokenizeLyrics,tokenizeLine,type Language} from './language';
 import {clamp,mix} from './math';
-export interface Transcript {method?:string;segments:{start:number;end:number;text:string;words?:{text:string;start:number;end:number;confidence?:number}[]}[]}
+export interface Transcript {method?:string;language?:string;segments:{start:number;end:number;text:string;words?:{text:string;start:number;end:number;confidence?:number}[]}[]}
 function similarity(a:string,b:string){
  a=normalize(a);b=normalize(b);if(a===b)return 1;if(Math.min(a.length,b.length)<4)return 0;
  let row=Array.from({length:b.length+1},(_,i)=>i);
  for(let i=1;i<=a.length;i++){const next=[i];for(let j=1;j<=b.length;j++)next[j]=Math.min(next[j-1]+1,row[j]+1,row[j-1]+(a[i-1]===b[j-1]?0:1));row=next;}
  return 1-row[b.length]/Math.max(a.length,b.length);
 }
-export function alignLyrics(lyrics:string,analysis:Analysis,transcript?:Transcript){
- const tokens: {text:string;line:number}[]=[];
- lyrics.split('\n').forEach((line,i)=>line.trim().split(/\s+/).filter(Boolean).forEach(text=>tokens.push({text,line:i})));
+export function alignLyrics(lyrics:string,analysis:Analysis,transcript?:Transcript,language:Language='auto'){
+ const tokens=tokenizeLyrics(lyrics,language);
  if(!tokens.length)return {words:[]as Word[],coverage:0,method:'no-lyrics',notes:['Sem letra. Cenas instrumentais.']};
- const observed=(transcript?.segments??[]).flatMap(s=>s.words??[]).filter(w=>w.end>w.start&&w.start>=0&&w.end<=analysis.duration+.1);
+ const observed=(transcript?.segments??[]).flatMap(s=>s.words??[]).flatMap(w=>{const pieces=tokenizeLine(w.text,language),total=Math.max(1,pieces.reduce((n,x)=>n+normalize(x).length,0));let cursor=w.start;return pieces.map(text=>{const start=cursor;cursor+=(w.end-w.start)*normalize(text).length/total;return{...w,text,start,end:cursor,segmented:pieces.length>1};});}).filter(w=>w.end>w.start&&w.start>=0&&w.end<=analysis.duration+.1);
  const N=tokens.length,M=observed.length,dp=new Float32Array((N+1)*(M+1)),prev=new Uint8Array((N+1)*(M+1));
  for(let i=1;i<=N;i++){dp[i*(M+1)]=i;prev[i*(M+1)]=1;}for(let j=1;j<=M;j++){dp[j]=j;prev[j]=2;}
  for(let i=1;i<=N;i++)for(let j=1;j<=M;j++){
@@ -32,7 +32,7 @@ export function alignLyrics(lyrics:string,analysis:Analysis,transcript?:Transcri
  const keys=[-1,...[...anchors.keys()].sort((a,b)=>a-b),N];
  for(let z=0;z<keys.length-1;z++){
   const left=keys[z],right=keys[z+1];
-  if(left>=0){const a=anchors.get(left)!;Object.assign(words[left],{start:a.start,end:Math.min(a.end,analysis.duration),confidence:a.confidence??.8,source:'asr'});}
+  if(left>=0){const a=anchors.get(left)!;Object.assign(words[left],{start:a.start,end:Math.min(a.end,analysis.duration),confidence:a.segmented?Math.min(.45,a.confidence??.8):a.confidence??.8,source:a.segmented?'interpolated':'asr'});}
   const count=right-left-1;if(!count)continue;
   const from=left>=0?anchors.get(left)!.end:lead,to=right<N?anchors.get(right)!.start:tail;
   const weights=tokens.slice(left+1,right).map(t=>Math.max(1,normalize(t.text).length**.6)),total=weights.reduce((a,b)=>a+b,0);let offset=0;
@@ -49,6 +49,6 @@ export function alignLyrics(lyrics:string,analysis:Analysis,transcript?:Transcri
   const w=words[k],remaining=(words.length-k)*.008;
   w.start=clamp(Math.max(w.start,end),0,analysis.duration-remaining);w.end=clamp(Math.max(w.start+.008,w.end),w.start+.008,analysis.duration-remaining+.008);end=w.end;
  }
- const coverage=anchors.size/N;
- return {words,coverage,method:observed.length?'ASR word anchors + monotonic sequence alignment + onset interpolation':'spectral pacing estimate (NOT forced alignment)',notes:[`${anchors.size}/${N} palavras com âncoras reconhecidas.`,`Palavras ${observed.length?'interpoladas':'estimadas'} precisam de revisão; não são alinhamento fonético.`,...(coverage<.8?['Confiança limitada: revise na linha do tempo antes de publicar.']:[])]};
+ const recognized=words.filter(w=>w.source==='asr').length,coverage=recognized/N;
+ return {words,coverage,method:observed.length?'ASR word anchors + monotonic sequence alignment + onset interpolation':'spectral pacing estimate (NOT forced alignment)',notes:[`${recognized}/${N} palavras com âncoras reconhecidas.`,`Palavras ${observed.length?'interpoladas':'estimadas'} precisam de revisão; não são alinhamento fonético.`,...(coverage<.8?['Confiança limitada: revise na linha do tempo antes de publicar.']:[])]};
 }

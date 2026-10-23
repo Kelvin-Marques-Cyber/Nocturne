@@ -2,22 +2,26 @@
 
 **Videoclipes musicais animados, renderizados localmente em MP4.**
 
-![Cenas do motor: constelações, televisão CRT em perspectiva 3D, corredor e negação](docs/cenas.png)
+![Cenas do motor: constelações, televisão CRT em perspectiva 3D, corredor, negação e close-up da letra](docs/cenas.png)
 
 Nocturne transforma áudio, letra e um storyboard JSON em cenas com personagens articulados, palavras físicas, interfaces, câmera e ambientes com perspectiva 3D. O editor usa React e TypeScript; a prévia e a exportação executam o mesmo motor SVG calculado por tempo. Sharp rasteriza os quadros e FFmpeg produz H.264 com áudio AAC.
 
-Esta é uma primeira implementação funcional. O planejamento automático utiliza regras semânticas e metáforas editáveis; não é um modelo generativo capaz de inventar uma direção inédita para qualquer letra. A revisão artística e de sincronização continua importante.
+Esta é uma primeira implementação funcional. O planejamento automático utiliza um vocabulário multilíngue, expressões e metáforas editáveis; não é um modelo generativo capaz de inventar uma direção inédita para qualquer letra. A revisão artística e de sincronização continua importante.
 
 ## O que já funciona
 
 - Importação de MP3, WAV e FLAC, edição da letra e importação/exportação de projetos JSON.
 - Análise local de ataques, BPM provável, batidas, envelopes de energia, silêncios e mudanças prováveis de seção.
 - Alinhamento por âncoras ASR com correspondência monotônica; trechos ausentes recebem interpolação explicitamente sinalizada.
-- 17 famílias de cenas: constelação, coração, fuga, decisão, chamada, ocultação, alma, queda, negação, órbita, descanso, terminal, oceano, porta, elevação, televisão CRT e corredor 3D.
-- Personagens vetoriais com IK de dois segmentos, ciclo de passada, apoio dos pés, antecipação, respiração e mistura contínua entre ações.
-- Andar, correr, tropeçar, cair, ajoelhar, levantar, rastejar, hesitar, reagir, segurar, empurrar, arrastar e descansar.
+- 20 famílias de cenas: constelação, coração, fuga, decisão, chamada, ocultação, alma, queda, negação, órbita, descanso, terminal, oceano, porta, elevação, televisão CRT, corredor 3D, espelho, tempestade e relógio.
+- Personagens vetoriais com IK de dois segmentos, passadas com contato e velocidade contínuos, pés apoiados no chão, antecipação, respiração e mistura contínua entre ações.
+- Andar, correr, tropeçar, cair, ajoelhar, levantar, rastejar, hesitar, reagir, segurar, empurrar, arrastar e descansar, além de virar, resistir ao vento, flutuar e recuar de um impacto.
 - Televisão construída com vértices 3D, projeção perspectiva e palavras projetadas na superfície da tela. Chiado, varredura, antenas, botões, volume e movimento de câmera são procedurais.
-- Nove transições: corte, obturador, tinta, escurecimento, troca de canal, íris, whip pan, queima e mergulho.
+- 17 transições com duração ligada ao BPM: corte, obturador, tinta, dissolução real, troca de canal, íris, whip pan, queima, mergulho, planos divididos, fragmentação, película vertical, onda circular, varredura CRT, diafragma, reescrita e travessia de profundidade.
+- Zooms semânticos por palavra/frase: a câmera entra na letra ou na TV; o cenário e o personagem saem do quadro durante o close-up. Os eventos acompanham o `wordId` quando os tempos são editados.
+- Seis estilos e 14 filtros combináveis: noir, giz, sinal, corrupção digital, industrial ácido e esmeralda. Camadas têm intensidade, ordem e ativação próprias.
+- Vocabulário narrativo em português, inglês, espanhol, japonês, coreano, russo, francês, alemão, italiano e chinês, com evidência das palavras reconhecidas no Inspector.
+- PWA estático para GitHub Pages: importação, análise STFT em worker, edição e MP4 H.264/AAC no navegador com WebCodecs. Arquivos de áudio ficam no IndexedDB do aparelho.
 - Editor com monitor, linha do tempo, envelope sonoro, cenas, palavras, câmera, personagem, estilos, desfazer e exportação com progresso.
 - MP4 H.264 em 1080 × 1920 ou 1920 × 1080, a 30 ou 60 FPS, com áudio sincronizado.
 - Adaptador de composição para Remotion, opcional. O renderizador principal não depende do navegador nem de uma licença paga do Remotion.
@@ -74,6 +78,7 @@ npm run project -- \
 | `--out` | Caminho do projeto JSON gerado. |
 | `--analysis` | Reutiliza uma análise JSON em vez de analisar novamente. |
 | `--transcript` | Usa uma transcrição local que contenha tempos por palavra. |
+| `--language` | `auto`, `pt`, `en`, `es`, `ja`, `ko`, `ru`, `fr`, `de`, `it` ou `zh`; orienta ASR e vocabulário. |
 | `--transcribe` | Executa o ASR opcional antes do alinhamento. |
 | `--reference` | Analisa tecnicamente um vídeo de referência e anexa os dados ao projeto. |
 
@@ -85,7 +90,9 @@ python scripts/transcribe.py "/caminho/musica.mp3" --out projects/asr.json --mod
 npm run project -- --audio "/caminho/musica.mp3" --lyrics letra.txt --transcript projects/asr.json --out projects/novo.json
 ```
 
-`--model small` usa o modelo multilíngue pequeno; o primeiro uso baixa os pesos. Depois de armazenados, o processamento é local. `--model /pasta/do/modelo` permite usar pesos já disponíveis sem download. `--language pt` indica português.
+`--model small` usa o modelo multilíngue pequeno; o primeiro uso baixa os pesos. Depois de armazenados, o processamento é local. `--model /pasta/do/modelo` permite usar pesos já disponíveis sem download. `--language pt` indica português; `--language auto` detecta o idioma no ASR. No editor, escolha o idioma antes de gerar o storyboard ou deixe Automático. Japonês e chinês usam `Intl.Segmenter`; coreano mantém os espaços e reconhece os radicais cadastrados.
+
+Para japonês, coreano ou chinês, `npm run fonts` prepara uma vez a fonte Noto CJK, com checksum e licença OFL. A preparação local ocorre automaticamente quando um projeto CJK é criado/renderizado. No PWA, a primeira utilização baixa e guarda a fonte no aparelho. Depois, ela funciona offline.
 
 O JSON ASR segue `{ "segments": [{ "start": 1, "end": 3, "text": "...", "words": [{ "text": "palavra", "start": 1.2, "end": 1.7, "confidence": 0.9 }] }] }`. Também pode ser importado na aba Letra.
 
@@ -129,10 +136,11 @@ O áudio é decodificado sem a capa incorporada ao MP3. A duração do exemplo �
 
 1. Importe áudio e letra. O botão Gerar storyboard substitui o planejamento atual; Desfazer recupera o estado anterior da sessão.
 2. Clique em uma cena ou na linha do tempo. Use Espaço para reproduzir e setas para avançar ou recuar um quadro; Shift + seta move um segundo.
-3. Escolha metáfora, ação, texto visual, transição e câmera no Inspector.
-4. Clique em uma palavra e ajuste `in` e `out`. Eventos que referenciam essa palavra acompanham sua alteração.
-5. Salve o JSON. O navegador também guarda um rascunho local; o arquivo baixado e sua música são o conjunto portátil do projeto.
-6. Exporte toda a faixa, a cena selecionada ou 15 segundos a partir do cursor. O botão Baixar MP4 aparece quando o encoder termina.
+3. Escolha o estilo no monitor. No Inspector, ajuste metáfora, ação, transição, câmera e ponto de interesse. Em Filtros em camadas, adicione, ligue/desligue, reordene e ajuste cada efeito.
+4. Use Zoom na letra para controlar a intensidade por cena. Focar palavra selecionada cria um close-up manual; Planejar zooms da música refaz os eventos automáticos.
+5. Clique em uma palavra e ajuste `in` e `out`. Eventos que referenciam essa palavra acompanham sua alteração.
+6. Salve o JSON. O navegador também guarda um rascunho local; o arquivo baixado e sua música são o conjunto portátil do projeto.
+7. Exporte toda a faixa, a cena selecionada ou 15 segundos a partir do cursor. O botão Baixar MP4 aparece quando o encoder termina.
 
 Áudios importados, rascunhos, renders e dependências estão no `.gitignore`. O servidor foi construído como ferramenta local, sem contas, autenticação, fila distribuída ou hospedagem multiusuário. Não o exponha como serviço público sem implementar essa camada.
 
@@ -144,6 +152,10 @@ O projeto possui `schemaVersion`, `seed`, `duration`, `audio`, `lyrics`, `analys
 | --- | --- |
 | `src/engine/model.ts` | Contratos JSON, estilos e validação. |
 | `src/engine/math.ts` | Interpolação, easing, amostragem, ruído com seed e IK. |
+| `src/engine/language.ts` / `semantics.ts` | Segmentação Unicode, medidas de texto, vocabulário e conceitos multilíngues. |
+| `src/engine/focus.ts` | Seleção, envelopes e enquadramento dos close-ups tipográficos. |
+| `src/engine/transitions.ts` / `effects.ts` | Composição entre planos e pilha de filtros determinísticos. |
+| `src/browser/` | Análise em worker, IndexedDB, contornos das fontes e MP4 com WebCodecs/AAC WASM. |
 | `src/engine/rig.ts` | Corpo, poses e mistura entre movimentos. |
 | `src/engine/frame.ts` | Direção por tempo, cenas SVG, palavras, câmera e efeitos. |
 | `src/engine/space3d.ts` | Projeção perspectiva, TV, textos na tela e corredor profundo. |
@@ -195,3 +207,28 @@ Remotion possui termos próprios, inclusive regras para organizações maiores. 
 Código original: **Copyright 2026 Kelvin e Silva Marques**, sob a **Apache License, Version 2.0**. Veja [LICENSE](LICENSE), [NOTICE](NOTICE) e [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 A licença do código não transfere os direitos da música, da letra, do vídeo de referência nem das dependências.
+
+## PWA e branch gh-pages
+
+O mesmo editor tem dois modos. O servidor local usa Python e FFmpeg. O build do Pages executa importação, análise, prévia e exportação no aparelho, sem rotas `/api` nem envio da música para um servidor. O código-fonte fica em `main`; a branch `gh-pages` contém apenas os arquivos publicados.
+
+```bash
+npm run build:pages
+npm run preview:pages
+```
+
+`build:pages` gera `dist` para `/Nocturne/`, injeta o cache versionado do service worker e inclui manifesto, ícones e licenças. A lista de arquivos de publicação é explícita: gravações pessoais, referências e rascunhos ficam fora do build. `preview:pages` serve o build para revisão. `NOCTURNE_BASE=/ npm run build:pages` gera para a raiz de um domínio; a base termina em `/`.
+
+Para publicar com suas credenciais Git habituais:
+
+```bash
+npm run deploy
+```
+
+Esse comando compila, cria um checkout temporário, preserva o histórico existente de `gh-pages` e faz push normal, rejeitando alterações concorrentes. No GitHub, em **Settings → Pages → Build and deployment**, selecione **Deploy from a branch → gh-pages → / (root)**. Não exige GitHub Actions.
+
+Abra o endereço HTTPS publicado e use Instalar app quando o navegador oferecer a opção; no iPhone, use Compartilhar → Adicionar à Tela de Início. O shell é guardado após o primeiro acesso; músicas importadas ficam no IndexedDB. Atualizações do app são ativadas depois que as abas antigas são fechadas. Salve o JSON como cópia portátil; apagar dados do site remove os arquivos locais.
+
+A exportação no PWA precisa de um navegador com encoder WebCodecs H.264 disponível. O áudio AAC tem fallback WASM local. A aplicação verifica o suporte e informa quando é necessário usar Chrome/Edge compatível ou o renderizador FFmpeg. Uma prévia HTTP em host não confiável não oferece instalação nem WebCodecs; GitHub Pages usa HTTPS. A duração segue os samples de áudio e os timestamps de cada frame, sem captura da tela em tempo real.
+
+O planejamento aceita qualquer letra, mas o reconhecimento semântico cobre os conceitos cadastrados nos dez idiomas. Expressões desconhecidas recebem direção alternativa editável. Sem uma transcrição ASR importada, os tempos no PWA continuam estimados, sinalizados e ajustáveis.

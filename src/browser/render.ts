@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Kelvin e Silva Marques
+import{Output,Mp4OutputFormat,BufferTarget,CanvasSource,AudioBufferSource,Quality,canEncodeAudio,canEncodeVideo}from'mediabunny';
+import{registerAacEncoder}from'@mediabunny/aac-encoder';
+import type{Project}from'../engine/model';
+import{validateProject,dimensions}from'../engine/model';
+import{renderFrame}from'../engine/frame';
+import{audioBlob,decodeAudio}from'../editor/platform';
+import{loadFilmFonts,outlineText}from'./fonts';
+export interface BrowserRenderOptions{from?:number;duration?:number;width?:number;height?:number;signal?:AbortSignal;onProgress?:(percent:number)=>void;}
+export async function renderBrowserVideo(project:Project,options:BrowserRenderOptions={}):Promise<Blob>{
+ validateProject(project);
+ const dim=dimensions(project.format),w=options.width??dim.width,h=options.height??dim.height,from=options.from??0,duration=Math.min(options.duration??project.duration,project.duration-from);
+ if(!Number.isFinite(from)||from<0||duration<=0||w%2||h%2||w<=0||h<=0)throw Error('Trecho ou dimensões inválidos.');
+ if(!await canEncodeVideo('avc',{width:w,height:h,frameRate:project.fps}))throw Error('Este navegador não oferece codificação H.264. Abra no Chrome/Edge com WebCodecs ou use o renderizador FFmpeg local.');
+ if(!await canEncodeAudio('aac'))registerAacEncoder();
+ const fonts=await loadFilmFonts(project.lyrics),buffer=await decodeAudio(await audioBlob(project.audio),48000);
+ if(buffer.duration+.05<from+duration)throw Error('A gravação importada termina antes do trecho solicitado. Importe o áudio correspondente ao storyboard.');
+ const start=Math.round(from*buffer.sampleRate),length=Math.min(Math.round(duration*buffer.sampleRate),buffer.length-start);
+ if(length<1)throw Error('O áudio importado não cobre este trecho.');
+ const clip=new AudioBuffer({length,numberOfChannels:buffer.numberOfChannels,sampleRate:buffer.sampleRate});for(let c=0;c<clip.numberOfChannels;c++)clip.copyToChannel(buffer.getChannelData(c).subarray(start,start+length),c);
+ const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const context=canvas.getContext('2d',{alpha:false});if(!context)throw Error('Canvas 2D indisponível.');
+ const target=new BufferTarget(),output=new Output({format:new Mp4OutputFormat({fastStart:'in-memory'}),target}),video=new CanvasSource(canvas,{codec:'avc',quality:new Quality({bitrate:w*h*project.fps*.13}),keyFrameInterval:2}),audio=new AudioBufferSource({codec:'aac',quality:new Quality({bitrate:192000})});
+ output.addVideoTrack(video,{frameRate:project.fps});output.addAudioTrack(audio);await output.start();
+ const cache=new Map<string,string>(),total=Math.ceil(duration*project.fps);const image=new Image();
+ try{
+  await audio.add(clip);audio.close();
+  for(let frame=0;frame<total;frame++){
+   if(options.signal?.aborted)throw Error('Renderização cancelada.');
+   const svg=outlineText(renderFrame(project,from*project.fps+frame,{width:w,height:h}),fonts,cache),url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+   try{await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(Error('Falha ao desenhar um quadro SVG.'));image.src=url;});context.drawImage(image,0,0,w,h);}finally{URL.revokeObjectURL(url);}
+   await video.add(frame/project.fps,Math.min(1/project.fps,duration-frame/project.fps));
+   if(frame%3===0||frame===total-1){options.onProgress?.((frame+1)/total*100);await new Promise<void>(r=>setTimeout(r,0));}
+   if(cache.size>2500)cache.clear();
+  }
+  video.close();await output.finalize();if(!target.buffer)throw Error('MP4 não foi finalizado.');return new Blob([target.buffer],{type:'video/mp4'});
+ }catch(error){await output.cancel();throw error;}
+}

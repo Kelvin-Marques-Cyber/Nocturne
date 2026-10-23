@@ -4,25 +4,32 @@ import type {Project,Scene,Word,Point} from './model';
 import {dimensions} from './model';
 import {clamp,mix,smooth,easeOut,rand,n,esc,pt,pulse,sample,nearestBefore} from './math';
 import {poseAt,characterSVG} from './rig';
-import {television3D,tunnel3D} from './space3d';
+import {television3D,tunnel3D,projector} from './space3d';
+import {evaluateLyricFocus,renderLyricFocus} from './focus';
+import {composeTransition,transitionDuration} from './transitions';
+import {applyEffects} from './effects';
+import {filmFont,textWidth,joinWords} from './language';
 
 export function sceneAt(p:Project,t:number){return p.scenes.find(s=>t>=s.start&&t<s.end)??(t<p.scenes[0].start?p.scenes[0]:p.scenes.at(-1)!);}
 export function activeWord(p:Project,t:number){return p.words.find(w=>t>=w.start&&t<w.end);}
 const line=(x1:number,y1:number,x2:number,y2:number,color:string,opacity=.4,width=1)=>`<path d="M${n(x1)} ${n(y1)}L${n(x2)} ${n(y2)}" stroke="${color}" stroke-width="${width}" opacity="${n(opacity)}" fill="none"/>`;
-const txt=(text:string,x:number,y:number,size:number,color:string,extra='')=>`<text x="${n(x)}" y="${n(y)}" font-family="DejaVu Sans Mono,monospace" font-size="${n(size)}" fill="${color}" ${extra}>${esc(text)}</text>`;
+const txt=(text:string,x:number,y:number,size:number,color:string,extra='')=>`<text x="${n(x)}" y="${n(y)}" font-family="${filmFont}" font-size="${n(size)}" fill="${color}" ${extra}>${esc(text)}</text>`;
 const ring=(x:number,y:number,r:number,color:string,op=1)=>`<circle cx="${n(x)}" cy="${n(y)}" r="${n(Math.max(0,r))}" stroke="${color}" fill="none" opacity="${n(op)}"/>`;
 
 interface Ctx {p:Project;s:Scene;t:number;local:number;q:number;w:number;h:number;u:number;ground:number;beat:number;energy:number;impact:number;accent:string;fg:string;words:Word[];}
-function hero(c:Ctx,x:number,y:number,scale=1,ghost=false,time=c.t){
+function hero(c:Ctx,x:number,y:number,scale=1,ghost=false,time=c.t,contacts?:{left?:Point;right?:Point}){
  let motionTime=time;
  for(const e of c.s.events.filter(e=>e.type==='freeze'))if(time>=e.at)motionTime-=clamp(time-e.at,0,e.duration);
- const p=poseAt(c.s.motions,motionTime);
+ const p=poseAt(c.s.motions,motionTime,c.p.analysis.bpm),unit=scale*c.u*c.p.character.scale;
+ if(contacts?.left)p.leftHand=[(contacts.left[0]-x)/unit,(contacts.left[1]-y)/unit];
+ if(contacts?.right)p.rightHand=[(contacts.right[0]-x)/unit,(contacts.right[1]-y)/unit];
  return `<g transform="translate(${n(x)} ${n(y)}) scale(${n(scale*c.u*c.p.character.scale)})">${characterSVG(p,c.p.character,c.accent,c.beat,ghost)}</g>`;
 }
 function wordObject(c:Ctx,text:string,x:number,y:number,size:number,progress:number,extra=''){
+ size=Math.min(size,c.w*.84/Math.max(1,textWidth(text)));
  const letters=[...text];
  return letters.map((ch,i)=>{if(!ch.trim())return'';const phase=easeOut(progress*2.3-i*.065),shift=(1-phase)*40,rot=(1-phase)*-14;
-  const lx=x+(i-(letters.length-1)/2)*size*.62;
+  const lx=x+(textWidth(letters.slice(0,i).join(''))-textWidth(text)*.5)*size;
   return `<g transform="translate(${n(lx)} ${n(y+shift)}) rotate(${n(rot)})" opacity="${n(phase)}">${c.p.style.chromatic?txt(ch,1.2*c.p.style.chromatic,0,size,c.accent,'opacity=".55"'):''}${txt(ch,0,0,size,c.fg,extra)}</g>`;
  }).join('');
 }
@@ -112,9 +119,8 @@ function echo(c:Ctx){
  return out;
 }
 function hide(c:Ctx){
- const shift=smooth(c.q)*c.w*.23,x=c.w*.38+shift,y=c.ground;let out=codeField(c,7);
- out+=hero(c,x,y,1.45);
- const bx=x-155*c.u,by=y-360*c.u;
+ const x=c.w*.38,y=c.ground,bx=x+mix(65,-155,smooth((c.q-.1)/.8))*c.u,by=y-360*c.u;let out=codeField(c,7);
+ out+=hero(c,x,y,1.45,false,c.t,{left:[bx+15*c.u,y-240*c.u],right:[bx+35*c.u,y-220*c.u]});
  out+=`<rect x="${n(bx)}" y="${n(by)}" width="${n(280*c.u)}" height="${n(342*c.u)}" fill="${c.p.style.background}" stroke="${c.fg}" stroke-opacity=".6" stroke-width="${2*c.u}"/>`;
  out+=txt('[ OCULTO ]',bx+20*c.u,by+44*c.u,20*c.u,c.fg,'opacity=".45"');
  for(let i=0;i<5;i++)out+=`<rect x="${n(bx+18*c.u)}" y="${n(by+(72+i*36)*c.u)}" width="${n((244-i%2*35)*c.u)}" height="${n(17*c.u)}" fill="${c.fg}" opacity=".08"/>`;
@@ -147,10 +153,10 @@ function fall(c:Ctx){
 }
 function denial(c:Ctx){
  const y=c.ground,x=c.w*.39,drop=smooth(clamp(c.local/1.2));let out=codeField(c,6);
- const yy=mix(c.h*.28,c.ground-290*c.u,drop);
+ const yy=mix(c.h*.28,c.ground-365*c.u,drop);
  out+=wordObject(c,c.s.accent,c.w*.56,yy,Math.min(c.w*.27,c.w*.78/Math.max(1,c.s.accent.length)*1.6),clamp(c.local/.8));
  out+=`<rect x="${c.w*.17}" y="${n(yy+24*c.u)}" width="${c.w*.7}" height="${3*c.u}" fill="${c.accent}"/>`;
- out+=hero(c,x,y,1.4);
+ out+=hero(c,x,y,1.4,false,c.t,{left:[x+65*c.u,yy+24*c.u],right:[x+110*c.u,yy+24*c.u]});
  for(let i=1;i<5;i++)out+=txt('NÃO',c.w*.17,c.h*.17+i*49*c.u,c.w*.13,c.accent,`opacity="${.03+i*.017}"`);
  out+=txt('booleano ≠ destino',c.w*.5,c.ground+54*c.u,16*c.u,c.accent);
  return out;
@@ -218,18 +224,44 @@ function lift(c:Ctx){
 }
 function television(c:Ctx){return television3D({width:c.w,height:c.h,time:c.t,local:c.local,seed:c.p.seed,accent:c.accent,fg:c.fg,words:c.words,variant:c.s.variant,energy:c.energy,beat:c.beat})+hero(c,c.w*.18,c.ground,1.05);}
 function tunnel3d(c:Ctx){return tunnel3D({width:c.w,height:c.h,time:c.t,local:c.local,seed:c.p.seed,accent:c.accent,fg:c.fg,words:c.words,variant:c.s.variant,energy:c.energy,beat:c.beat})+hero(c,c.w*.53,c.ground,1.5);}
-const worlds={constellation,heart,corridor,choice,echo,hide,soul,fall,denial,orbit,rest,terminal,ocean,door,lift,television,tunnel3d};
+function mirror(c:Ctx){
+ const edge=c.w*.56,top=c.h*.27,bottom=c.ground,pw=c.w*.31;
+ let out=codeField(c,3)+`<path d="M${edge} ${bottom}V${top}H${edge+pw}V${bottom}Z" fill="#13151b" stroke="${c.fg}" stroke-opacity=".48"/>`;
+ const x=edge-66*c.u;
+ out+=hero(c,x,c.ground,1.35,false,c.t,{right:[edge, c.ground-258*c.u]});
+ out+=`<g transform="translate(${2*edge} 0) scale(-1 1)" opacity=".4">${hero(c,x,c.ground,1.35,false,c.t-.19,{right:[edge,c.ground-258*c.u]})}</g>`;
+ for(let i=0;i<4;i++)out+=line(edge+15*c.u+i*13*c.u,top+8*c.u,edge+pw-10*c.u,top+90*c.u+i*19*c.u,c.fg,.045);
+ out+=wordObject(c,c.s.accent,c.w*.4,c.h*.23,c.w*.082,clamp(c.local/.9));
+ out+=line(c.w*.1,c.ground,c.w*.9,c.ground,c.accent,.3);return out;
+}
+function storm(c:Ctx){
+ let out='',wind=.4+c.energy*.6;
+ for(let i=0;i<95;i++){const x=(rand(c.p.seed+i*67)*c.w+c.local*150*wind)% (c.w*1.3)-c.w*.15,y=(rand(i*31)*c.h+c.local*(360+i%7*25))%c.h;
+  out+=line(x,y,x-22*c.u*wind,y-67*c.u,c.fg,.05+rand(i*27)*.12,1.1*c.u);}
+ out+=hero(c,c.w*.47,c.ground,1.55);
+ for(let i=0;i<4;i++){const age=(c.local*.28+i*.25)%1,x=c.w*(.1+age),y=c.h*(.29+i*.075)-Math.sin(age*Math.PI)*60*c.u;out+=txt(c.words[i%c.words.length]?.text??c.s.accent,x,y,(21+i*3)*c.u,c.accent,`opacity="${n(Math.sin(age*Math.PI)*.55)}" transform="rotate(-13 ${n(x)} ${n(y)})"`);}
+ out+=line(c.w*.08,c.ground,c.w*.91,c.ground,c.fg,.5,2*c.u);return out;
+}
+function clock(c:Ctx){
+ const x=c.w*.51,y=c.h*.4,r=c.w*.31,angle=c.local*c.p.analysis.bpm/60*Math.PI/6;
+ let out=codeField(c,3)+ring(x,y,r,c.fg,.25);
+ for(let i=0;i<12;i++){const a=i*Math.PI/6;out+=line(x+Math.sin(a)*r*.9,y-Math.cos(a)*r*.9,x+Math.sin(a)*r,y-Math.cos(a)*r,i===0?c.accent:c.fg,.5);}
+ out+=line(x,y,x+Math.sin(angle)*r*.82,y-Math.cos(angle)*r*.82,c.accent,.9,2.2*c.u);
+ out+=line(x,y,x+Math.sin(angle/12)*r*.5,y-Math.cos(angle/12)*r*.5,c.fg,.7,3*c.u);
+ out+=hero(c,c.w*.3,c.ground,1.4)+wordObject(c,c.s.accent,c.w*.5,c.h*.23,c.w*.08,clamp(c.local));return out;
+}
+const worlds={constellation,heart,corridor,choice,echo,hide,soul,fall,denial,orbit,rest,terminal,ocean,door,lift,television,tunnel3d,mirror,storm,clock};
 
 function captions(c:Ctx){
  if(!c.p.style.captions||!c.words.length)return'';
  const active=c.words.find(w=>c.t>=w.start&&c.t<w.end)??[...c.words].reverse().find(w=>c.t>=w.end&&c.t-w.end<.65);
  if(!active)return'';
  const ws=c.words.filter(w=>w.line===active.line),maxWidth=c.w*.8;
- const size=Math.min(34*c.u,maxWidth/Math.max(1,ws.map(w=>w.text.length).reduce((a,b)=>a+b,0)+ws.length)*1.6);
- const total=ws.reduce((a,w)=>a+(w.text.length+1)*size*.61,0);let x=(c.w-total)/2;
+ const size=Math.min(34*c.u,maxWidth/Math.max(1,ws.reduce((n,w)=>n+textWidth(w.text)/.61,0)+ws.length)*1.6);
+ const total=ws.reduce((a,w)=>a+(textWidth(w.text)+.61)*size,0);let x=(c.w-total)/2;
  return ws.map(w=>{
   const a=clamp((c.t-w.start+.16)/.26),y=c.h*.834+(1-easeOut(a))*12*c.u,color=c.t>=w.start&&c.t<w.end?c.accent:c.fg;
-  const result=txt(w.text,x,y,size,color,`opacity="${n(c.t>=w.start?.95:.21)}"`);x+=(w.text.length+1)*size*.61;return result;
+  const result=txt(w.text,x,y,size,color,`opacity="${n(c.t>=w.start?.95:.21)}"`);x+=(textWidth(w.text)+.61)*size;return result;
  }).join('');
 }
 function grain(c:Ctx,frame:number){
@@ -240,47 +272,59 @@ function grain(c:Ctx,frame:number){
   out+=`<rect x="${n(x)}" y="${n(y)}" width="${n((1+rand(i)*6)*c.u)}" height="${n(.6*c.u)}" fill="${c.fg}" opacity="${n(amount*.28)}"/>`;
  }return out;
 }
-export function renderFrame(p:Project,frame:number,options?:{width?:number;height?:number}):string{
- const dim=dimensions(p.format),w=dim.width,h=dim.height,u=Math.min(w,h)/1080,t=clamp(frame/p.fps,0,p.duration-.000001),s=sceneAt(p,t),local=t-s.start,q=clamp(local/(s.end-s.start));
+function context(p:Project,s:Scene,t:number):Ctx{
+ const {width:w,height:h}=dimensions(p.format),u=Math.min(w,h)/1080,local=t-s.start,q=clamp(local/(s.end-s.start));
  const beat=pulse(t,nearestBefore(p.analysis.beats,t),.14),energy=sample(p.analysis.energy,p.analysis.hopSeconds,t);
  const impact=Math.max(pulse(t,nearestBefore(p.analysis.impacts,t),.1)*.45,...s.events.filter(e=>e.type==='impact').map(e=>pulse(t,e.at,.15)*e.strength),0);
- const c:Ctx={p,s,t,local,q,w,h,u,ground:h*.735,beat,energy,impact,accent:p.style.accent,fg:p.style.foreground,words:p.words.filter(w=>s.wordIds.includes(w.id))};
- let world=worlds[s.kind](c);
- const zoom=mix(s.camera.zoomFrom,s.camera.zoomTo,smooth(q))*(s.transition==='zoom'?mix(1.3,1,smooth(local/.55)):1);
- const shake=impact*s.camera.shake*5*u;
- const dx=s.camera.panX*smooth(q)*u+Math.sin(t*47.3)*shake+(s.transition==='whip'?(1-easeOut(local/.45))*w*.5:0),dy=s.camera.panY*smooth(q)*u+Math.sin(t*53.7)*shake*.6;
- const roll=s.camera.roll*Math.sin(Math.PI*q)+Math.sin(t*.4)*.12;
- world=`<g transform="translate(${n(w/2+dx)} ${n(h*.52+dy)}) rotate(${n(roll)}) scale(${n(zoom)}) translate(${-w/2} ${-h*.52})">${world}</g>`;
- const px=options?.width??w,py=options?.height??h;
- let out=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${px}" height="${py}" viewBox="0 0 ${w} ${h}"><defs><radialGradient id="red-haze"><stop stop-color="${c.accent}" stop-opacity=".13"/><stop offset="1" stop-color="${c.accent}" stop-opacity="0"/></radialGradient><radialGradient id="vignette"><stop offset=".4" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity=".57"/></radialGradient><pattern id="scan" width="4" height="${5*u}" patternUnits="userSpaceOnUse"><path d="M0 0 H${w}" stroke="#000000" stroke-width="${u}" opacity=".35"/></pattern><clipPath id="slice"><rect x="0" y="${n(h*(.25+rand(frame+81)*.5))}" width="${w}" height="${n((7+rand(frame)*23)*u)}"/></clipPath></defs><rect width="${w}" height="${h}" fill="${p.style.background}"/><circle cx="${w*.35}" cy="${h*.46}" r="${w*.63}" fill="url(#red-haze)" opacity="${n(.4+energy*.3)}"/><g id="world">${world}</g>`;
- const glitch=Math.max(impact,...s.events.filter(e=>e.type==='glitch').map(e=>pulse(t,e.at,.1)*e.strength))*p.style.glitch;
- if(glitch>.11){const offset=(rand(frame+p.seed)-.5)*24*glitch*u;out+=`<g clip-path="url(#slice)"><rect width="${w}" height="${h}" fill="${p.style.background}"/><use xlink:href="#world" transform="translate(${n(offset)} 0)"/></g>`;}
- if(s.kind!=='television')out+=captions(c);
- // Small terminal framing belongs to the film, not the editor.
- out+=txt(p.title.toLowerCase().replace(/\s+/g,'_')+'.ts',w*.075,h*.086,15*u,c.fg,'opacity=".6"');
- out+=`<rect x="${w*.075-14*u}" y="${h*.086-11*u}" width="${5*u}" height="${10*u}" fill="${c.accent}"/>`;
- out+=line(w*.075,h*.102,w*.925,h*.102,c.fg,.15);
- out+=txt(String(p.scenes.indexOf(s)+1).padStart(2,'0')+' / '+String(p.scenes.length).padStart(2,'0'),w*.8,h*.086,13*u,c.accent,'opacity=".7"');
- out+=line(w*.075,h*.876,w*.925,h*.876,c.fg,.15);
- const code=c.s.code.length>60?c.s.code.slice(0,57)+'...':c.s.code;
- out+=txt(code,w*.075,h*.907,Math.min(18*u,w*.85/(code.length*.62)),c.fg,'opacity=".58"');
- out+=txt(p.artist.toUpperCase(),w*.075,h*.946,11*u,c.fg,'opacity=".28"');
- out+=txt('●  '+(p.duration-t<3?'END':'REC'),w*.82,h*.946,11*u,c.accent,'opacity=".55"');
- out+=`<rect width="${w}" height="${h}" fill="url(#scan)" opacity="${n(p.style.vhs*.5)}"/>`+grain(c,frame)+`<rect width="${w}" height="${h}" fill="url(#vignette)"/>`;
- // Purposeful scene transitions: shutters and exposure/ink fades, never slide swaps.
- const enter=smooth(local/.3),leave=smooth((s.end-t)/.23);
- if(s.transition==='shutter'&&local<.38){const cover=(1-smooth(local/.38))*w*.52;out+=`<rect width="${cover}" height="${h}" fill="${c.accent}" opacity=".9"/><rect x="${w-cover}" width="${cover}" height="${h}" fill="${p.style.background}"/>`;}
- if(s.transition==='ink'&&local<.25)out+=`<rect width="${w}" height="${h}" fill="${p.style.background}" opacity="${n(1-enter)}"/>`;
- if(s.transition==='channel'&&local<.42){
-  const fade=1-smooth(local/.42);
-  out+=`<rect width="${w}" height="${h}" fill="${p.style.background}" opacity="${n(fade*.85)}"/>`;
-  for(let i=0;i<42;i++){const y=rand(p.seed+frame*31+i)*h,hh=(3+rand(i+frame)*20)*u;out+=`<rect x="0" y="${n(y)}" width="${w}" height="${n(hh)}" fill="${i%4?c.fg:c.accent}" opacity="${n(fade*(.05+rand(i)*.23))}"/>`;}
-  out+=line(0,h*.5,w,h*.5,c.fg,fade,Math.max(1,fade*8)*u);
+ return{p,s,t,local,q,w,h,u,ground:h*.735,beat,energy,impact,accent:p.style.accent,fg:p.style.foreground,words:p.words.filter(w=>s.wordIds.includes(w.id))};
+}
+function sceneLayer(c:Ctx,frame:number,id:string){
+ const{p,s,t,local,q,w,h,u,energy,impact}=c,focus=evaluateLyricFocus(p,s,t),a=focus?.amount??0,visibility=1-smooth(a/.94);
+ const z=mix(s.camera.zoomFrom,s.camera.zoomTo,smooth(q)),shake=impact*s.camera.shake*4*u*(1-a);
+ const dx=s.camera.panX*smooth(q)*u+Math.sin(t*47.3)*shake,dy=s.camera.panY*smooth(q)*u+Math.sin(t*53.7)*shake*.6;
+ const roll=s.camera.roll*Math.sin(Math.PI*q)*(1-a);
+ let world='';
+ if(visibility>.001){
+  world=worlds[s.kind](c);
+  world=`<g transform="translate(${n(w/2+dx)} ${n(h*.52+dy)}) rotate(${n(roll)}) scale(${n(z)}) translate(${n(-mix(w*.5,w*(s.camera.focusX??.5),smooth(q)))} ${n(-mix(h*.52,h*(s.camera.focusY??.52),smooth(q)))})">${world}</g>`;
+  if(a>0){
+   const center:Point=s.kind==='television'?projector(w,h,.32+Math.sin(local*.34+s.variant)*.22,-.08+Math.sin(local*.2)*.04,1030,1100)([-67.5,-3,125]):[w*.5,h*.74];
+   const zoom=1+a*(s.kind==='television'?1.7:.35),target:Point=[mix(w*.5,center[0],a),mix(h*.5,center[1],a)];
+   world=`<g transform="translate(${w*.5} ${h*.5}) scale(${n(zoom)}) translate(${n(-target[0])} ${n(-target[1])})">${world}</g>`;
+  }
  }
- if(s.transition==='iris'&&local<.6){const r=easeOut(local/.6)*Math.hypot(w,h);out+=`<path d="M0 0H${w}V${h}H0Z M${n(w*.5-r)} ${n(h*.48)}a${n(r)} ${n(r)} 0 1 0 ${n(2*r)} 0a${n(r)} ${n(r)} 0 1 0 ${n(-2*r)} 0" fill="${p.style.background}" fill-rule="evenodd"/>`;}
- if(s.transition==='burn'&&local<.25){const k=1-smooth(local/.25);out+=`<rect width="${w}" height="${h}" fill="${c.accent}" opacity="${n(k*.58)}"/><rect x="${w*.85}" width="${w*.15}" height="${h}" fill="${c.fg}" opacity="${n(k*.35)}"/>`;}
- const exposure=Math.max(0,...s.events.filter(e=>e.type==='flash').map(e=>pulse(t,e.at,e.duration*.35)*e.strength));if(exposure>.01)out+=`<rect width="${w}" height="${h}" fill="${c.fg}" opacity="${n(clamp(exposure)*.45)}"/>`;
- if(s.transition==='dissolve'&&local<.6)out+=`<rect width="${w}" height="${h}" fill="${p.style.background}" opacity="${n(1-smooth(local/.6))}"/>`;
+ let out=`<circle cx="${w*.35}" cy="${h*.46}" r="${w*.63}" fill="url(#red-haze)" opacity="${n((.4+energy*.3)*visibility)}"/><g id="${id}" opacity="${n(visibility)}">${world}</g>`;
+ const glitch=Math.max(impact,...s.events.filter(e=>e.type==='glitch').map(e=>pulse(t,e.at,.1)*e.strength))*p.style.glitch*(1-a);
+ if(glitch>.11){const offset=(rand(frame+p.seed)-.5)*24*glitch*u;out+=`<g clip-path="url(#slice)"><rect width="${w}" height="${h}" fill="${p.style.background}"/><use xlink:href="#${id}" transform="translate(${n(offset)} 0)"/></g>`;}
+ if(a<.9&&s.kind!=='television')out+=`<g opacity="${n(1-smooth(a/.45))}">${captions(c)}</g>`;
+ if(a<.99){
+  out+=`<g opacity="${n(1-smooth(a/.7))}">`;
+  out+=txt(p.title.toLowerCase().replace(/\s+/g,'_')+'.ts',w*.075,h*.086,15*u,c.fg,'opacity=".6"');
+  out+=`<rect x="${w*.075-14*u}" y="${h*.086-11*u}" width="${5*u}" height="${10*u}" fill="${c.accent}"/>`;
+  out+=line(w*.075,h*.102,w*.925,h*.102,c.fg,.15)+txt(String(p.scenes.indexOf(s)+1).padStart(2,'0')+' / '+String(p.scenes.length).padStart(2,'0'),w*.8,h*.086,13*u,c.accent,'opacity=".7"');
+  out+=line(w*.075,h*.876,w*.925,h*.876,c.fg,.15);
+  const code=c.s.code.length>60?c.s.code.slice(0,57)+'...':c.s.code;
+  out+=txt(code,w*.075,h*.907,Math.min(18*u,w*.85/Math.max(1,textWidth(code))),c.fg,'opacity=".58"');
+  out+=txt(p.artist.toUpperCase(),w*.075,h*.946,11*u,c.fg,'opacity=".28"')+txt('●  '+(p.duration-t<3?'END':'REC'),w*.82,h*.946,11*u,c.accent,'opacity=".55"')+'</g>';
+ }
+ if(focus)out+=renderLyricFocus(p,s,t,w,h,focus);
+ const exposure=Math.max(0,...s.events.filter(e=>e.type==='flash').map(e=>pulse(t,e.at,e.duration*.35)*e.strength));
+ if(exposure>.01)out+=`<rect width="${w}" height="${h}" fill="${c.fg}" opacity="${n(clamp(exposure)*.28*(1-a))}"/>`;
+ return out;
+}
+export function renderFrame(p:Project,frame:number,options?:{width?:number;height?:number}):string{
+ const {width:w,height:h}=dimensions(p.format),u=Math.min(w,h)/1080,t=clamp(frame/p.fps,0,p.duration-.000001),s=sceneAt(p,t),c=context(p,s,t);
+ const px=options?.width??w,py=options?.height??h;
+ let out=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${px}" height="${py}" viewBox="0 0 ${w} ${h}"><defs><radialGradient id="red-haze"><stop stop-color="${c.accent}" stop-opacity=".13"/><stop offset="1" stop-color="${c.accent}" stop-opacity="0"/></radialGradient><radialGradient id="vignette"><stop offset=".4" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity=".57"/></radialGradient><pattern id="scan" width="4" height="${5*u}" patternUnits="userSpaceOnUse"><path d="M0 0 H${w}" stroke="#000000" stroke-width="${u}" opacity=".35"/></pattern><clipPath id="slice"><rect x="0" y="${n(h*(.25+rand(frame+81)*.5))}" width="${w}" height="${n((7+rand(frame)*23)*u)}"/></clipPath></defs><rect width="${w}" height="${h}" fill="${p.style.background}"/>`;
+ const incoming=sceneLayer(c,frame,'world-current'),index=p.scenes.indexOf(s),duration=Math.min(transitionDuration(s.transition,p.analysis.bpm),(s.end-s.start)*.4),progress=duration?Math.max(clamp(c.local/duration),evaluateLyricFocus(p,s,t)?.amount??0):1;
+ if(index>0&&progress<1){
+  // A short outgoing handle is evaluated analytically, so limbs and camera
+  // continue moving during a transition, even when frames are requested backwards.
+  const previous=p.scenes[index-1],outgoing=sceneLayer(context(p,previous,t),frame,'world-previous');
+  out+=composeTransition({kind:s.transition,progress,incoming,outgoing,width:w,height:h,background:p.style.background,accent:c.accent,foreground:c.fg,seed:p.seed+index*173,time:t});
+ }else out+=incoming;
+ const a=evaluateLyricFocus(p,s,t)?.amount??0;
+ out+=`<rect width="${w}" height="${h}" fill="url(#scan)" opacity="${n(p.style.vhs*.4*(1-a*.8))}"/>`+grain(c,frame)+`<rect width="${w}" height="${h}" fill="url(#vignette)" opacity="${n(1-a*.8)}"/>`;
  if(t<1||p.duration-t<1.4)out+=`<rect width="${w}" height="${h}" fill="${p.style.background}" opacity="${n(t<1?1-smooth(t):1-smooth((p.duration-t)/1.4))}"/>`;
- return out+'</svg>';
+ return applyEffects(out+'</svg>',p.style.filters??[],{width:w,height:h,frame,seed:p.seed,energy:c.energy,beat:c.beat,focus:a});
 }

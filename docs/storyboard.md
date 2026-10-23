@@ -56,3 +56,13 @@ Exemplo de cena para incluir em um projeto completo:
 - Dados de referência opcionais descrevem dimensões, cortes prováveis e paleta. Não contêm os quadros ou o áudio do vídeo original.
 
 Para adicionar uma metáfora, amplie `kinds`, registre sua descrição em `metaphors`, implemente sua função em `frame.ts` ou num módulo dedicado e registre-a em `worlds`. O mesmo desenho aparecerá no editor e no render. Acrescente um teste para sua propriedade narrativa ou geométrica relevante e um teste de rasterização nos limites da transição.
+
+## Close-ups, filtros e idioma
+
+`Project.language` é opcional e aceita `auto` ou um dos dez códigos documentados. `Scene.meaning` guarda o idioma sugerido e os conceitos/palavras usados na decisão; é evidência do vocabulário, não uma tradução gerada. O normalizador preserva Hangul e kana sonoros. Frases têm prioridade sobre substantivos isolados; limites de palavras evitam reconhecer `run` dentro de `brunch`.
+
+Um close-up é um evento como `{ "type":"focus", "at":23.1, "duration":1.7, "strength":1, "wordId":"w20", "focusMode":"word" }`. `focusMode` também aceita `phrase`. O relógio efetivo vem do timestamp atual da palavra, mesmo se o `at` salvo estiver desatualizado. `camera.lyricFocus` varia de 0 a 1. No pico, a letra ocupa o palco e o personagem, as interfaces e a moldura não são desenhados. `camera.focusX` e `focusY` são pontos normalizados de interesse para movimentos de aproximação.
+
+`style.filters` é uma lista ordenada com até 12 camadas. Exemplo: `[{"id":"grade","type":"duotone","amount":0.8,"enabled":true},{"id":"light","type":"bloom","amount":0.4,"enabled":true}]`. Tipos válidos estão em `filterTypes`; cores e valores são validados antes de salvar/renderizar. Filtros de ruptura e interfaces reduzem a interferência durante close-ups, mantendo a palavra legível.
+
+O motor calcula os dois lados da transição por tempo absoluto, inclusive um pequeno trecho de continuação do plano anterior. Não depende de um framebuffer anterior. O browser converte os textos para contornos de glifos antes de rasterizar SVGs e entrega frames com timestamps explícitos ao encoder. O render local usa as mesmas curvas e o mesmo JSON com Sharp/FFmpeg. Rasterizadores podem apresentar pequenas diferenças de antialiasing e blur, mas os eventos e poses não dependem da ordem dos frames.

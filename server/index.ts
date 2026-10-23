@@ -9,6 +9,7 @@ import {randomUUID} from 'node:crypto';
 import {validateProject,type Project} from '../src/engine/model';
 import {alignLyrics,type Transcript} from '../src/engine/alignment';
 import {makeProject,createStoryboard} from '../src/engine/storyboard';
+import {ensureProjectFonts} from '../scripts/font-support';
 const port=Number(process.env.PORT??4173),root=process.cwd();
 for(const dir of ['projects','public/media','output'])await mkdir(dir,{recursive:true});
 const production=process.argv.includes('--production');
@@ -38,9 +39,10 @@ const server=createServer(async(req,res)=>{
    const {project,lyrics,transcript}=await parse(req)as {project:Project;lyrics:string;transcript?:Transcript};validateProject(project);
    if(typeof lyrics!=='string'||lyrics.length>100000)throw Error('Letra inválida.');
    if(transcript&&(!Array.isArray(transcript.segments)||transcript.segments.some(s=>!Array.isArray(s.words))))throw Error('Transcrição deve conter segments[].words[].');
-   const a=alignLyrics(lyrics,project.analysis,transcript),next={...project,lyrics,words:a.words,alignment:{method:a.method,coverage:a.coverage,notes:a.notes,reviewRequired:true}};
-   next.scenes=createStoryboard(lyrics,a.words,project.analysis);validateProject(next);json(res,next);return;
+   const a=alignLyrics(lyrics,project.analysis,transcript,project.language),next={...project,lyrics,words:a.words,alignment:{method:a.method,coverage:a.coverage,notes:a.notes,reviewRequired:true}};
+   next.scenes=createStoryboard(lyrics,a.words,project.analysis,project.language);validateProject(next);await ensureProjectFonts(next);json(res,next);return;
   }
+  if(pathname==='/api/fonts'&&req.method==='POST'){const p=await parse(req);if(typeof p.lyrics!=='string')throw Error('Letra inválida.');await ensureProjectFonts(p);json(res,{ready:true});return;}
   if(pathname==='/api/project'&&req.method==='POST'){
    const p=await parse(req)as Project;validateProject(p);const name=(p.id??'edited').replace(/[^a-z0-9-]/gi,'').slice(0,80)||'edited';
    await writeFile(`projects/${name}.json`,JSON.stringify(p,null,2));json(res,{saved:true});return;
@@ -68,6 +70,7 @@ const server=createServer(async(req,res)=>{
   if(pathname.startsWith('/api/')){json(res,{error:'Rota não encontrada.'},404);return;}
   if(vite){vite.middlewares(req,res,()=>{res.writeHead(404);res.end();});return;}
   if(pathname==='/'){await file(req,res,resolve('dist/index.html'),'text/html');return;}
+  if(pathname==='/NotoSansCJKjp-Regular.otf'){await file(req,res,resolve('public/NotoSansCJKjp-Regular.otf'),'font/otf');return;}
   const relative=decodeURIComponent(pathname).replace(/^\/+/,''),base=relative.startsWith('media/')?'public':'dist',path=resolve(base,relative);
   if(!path.startsWith(resolve(base)+'/'))throw Error('Caminho inválido.');
   const mime:Record<string,string>={'.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.mp3':'audio/mpeg','.wav':'audio/wav','.flac':'audio/flac','.ttf':'font/ttf'};

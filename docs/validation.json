@@ -1,7 +1,7 @@
 {
   "environment": "local Linux, Node 24, Python 3.12, FFmpeg",
   "tests": {
-    "passed": 15,
+    "passed": 36,
     "failed": 0
   },
   "build": "passed",
@@ -42,7 +42,9 @@
           "correlation": 0.999645
         }
       ]
-    }
+    },
+    "filename": "deus-nos-ve-vertical-v2.mp4",
+    "bytes": 45743810
   },
   "editorExport": {
     "format": "1920x1080",
@@ -60,5 +62,41 @@
   "notes": [
     "Video frame count is quantized by FFmpeg to the frame time base. The full decoded audio is preserved.",
     "Audio alignment is measured at 8000 Hz; 0 ms means no detected lag at that measurement resolution."
-  ]
+  ],
+  "revision": "1.1.0",
+  "direction": {
+    "scenes": 40,
+    "lyricCloseups": 34,
+    "availableTransitions": 17,
+    "transitionsInSong": 13,
+    "styles": 6,
+    "filters": 14,
+    "languages": [
+      "pt",
+      "en",
+      "es",
+      "ja",
+      "ko",
+      "ru",
+      "fr",
+      "de",
+      "it",
+      "zh"
+    ]
+  },
+  "pwa": {
+    "branch": "gh-pages",
+    "build": "passed",
+    "manifestAndCacheCheck": "passed",
+    "privateMediaIncluded": false,
+    "browserImport": {
+      "wavSeconds": 8,
+      "storyboardScenes": 2,
+      "language": "en",
+      "filtersSaved": 5,
+      "status": "passed via static UI without backend"
+    },
+    "browserMp4Export": "Not verified in this HTTP preview; WebCodecs encoding and installation require a secure context. Native FFmpeg MP4 verified.",
+    "hosting": "Branch published. Public URL still served the old main index at verification; select gh-pages / root in Pages settings."
+  }
 }

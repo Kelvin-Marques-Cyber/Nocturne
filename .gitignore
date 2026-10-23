@@ -11,3 +11,7 @@ projects/render-*
 projects/project-*.json
 core
 core.*
+
+fonts/NotoSansCJKjp-Regular.otf
+fonts/*.download
+public/NotoSansCJKjp-Regular.otf
